@@ -28,6 +28,10 @@ class Vector2:
             return Vector2(self.x / self.length, self.y / self.length)
         return Vector2(0, 0)
 
+    def Clear(self):
+        self.x = 0
+        self.y = 0
+
     @property
     def length(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
