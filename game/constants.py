@@ -24,3 +24,5 @@ INJURED3SPRITE = pyglet.sprite.Sprite(INJURED3, 0, 0)
 INJURED2SPRITE = pyglet.sprite.Sprite(INJURED2, 0, 0)
 INJURED1SPRITE = pyglet.sprite.Sprite(INJURED1, 0, 0)
 INJURED0SPRITE = pyglet.sprite.Sprite(INJURED0, 0, 0)
+
+REFERENCEPOINT = pyglet.image.load('images/reference.png')
