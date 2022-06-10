@@ -1,6 +1,7 @@
 import pyglet
 import socket
 import math
+from vector2 import Vector2
 
 def CenterImage(image):
     image.anchor_x = math.floor(image.width / 2)
@@ -29,3 +30,5 @@ INJURED1SPRITE = pyglet.sprite.Sprite(INJURED1, 0, 0)
 INJURED0SPRITE = pyglet.sprite.Sprite(INJURED0, 0, 0)
 
 REFERENCEPOINT = pyglet.image.load('images/reference.png')
+
+NO = Vector2()

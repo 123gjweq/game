@@ -25,6 +25,8 @@ class Game(pyglet.window.Window):
         # connection
         self.n = Network()
         self.other_players = self.n.SendGet(self.player)
+        #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
+        self.other_player_positions = []
 
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
@@ -32,7 +34,7 @@ class Game(pyglet.window.Window):
     def ThreadedNetwork(self):
         while True:
             self.other_players = self.n.SendGet(self.player)
-            time.sleep(0.05)
+            time.sleep(1)
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
@@ -65,8 +67,19 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = SCREENWIDTH / 2, SCREENHEIGHT / 2
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
-        for player in self.other_players:
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = player.pos.x + self.player.camera.x, player.pos.y + self.player.camera.y
+        for index, player in enumerate(self.other_players):
+            #we add a list to other play positions to keep track of other players
+            if len(self.other_player_positions) <= index:
+                self.other_player_positions.append([player.pos.x, 1])
+
+            if self.other_player_positions[index][0] == player.pos:
+                self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y\
+                 = player.pos.x + (player.vel.x * self.other_player_positions[index][1]) + self.player.camera.x ,\
+                 player.pos.y + (player.vel.y * self.other_player_positions[index][1]) + self.player.camera.y
+                self.other_player_positions[index][1] += 1
+            else:
+                self.other_player_positions[index] = [player.pos, 1]
+                self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = player.pos.x + self.player.camera.x, player.pos.y + self.player.camera.y
             self.PLAYERSPRITES[player.image_index].draw()
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
