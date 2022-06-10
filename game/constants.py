@@ -1,4 +1,5 @@
 import pyglet
+import socket
 import math
 
 def CenterImage(image):
@@ -8,6 +9,8 @@ def CenterImage(image):
 
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
+
+ADDRESS = (socket.gethostbyname(socket.gethostname()), 1234)
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')
