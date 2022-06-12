@@ -21,6 +21,7 @@ class Player:
         self.camera = Vector2(750, 450)
 
     def Move(self, keys, dt):
+        """
         # Update Velocity
         if keys[key.W]:
             self.accel.y += self.accel_constant
@@ -43,6 +44,24 @@ class Player:
         self.camera -= self.vel * dt
 
         self.accel.Clear()
+        """
+        self.vel.x = NO.x
+        self.vel.y = NO.y
+        if keys[key.W]:
+            self.vel.y = 5
+        if keys[key.S]:
+            self.vel.y = -5
+        if keys[key.A]:
+            self.vel.x = -5
+        if keys[key.D]:
+            self.vel.x = 5
+
+        if self.vel.x != 0 and self.vel.y != 0:
+            self.vel = self.vel * .707 #.707 is approximately the reciprocal of sqrt 2.
+
+        self.pos += self.vel * dt
+        self.camera -= self.vel * dt
+        
 
     def Update(self, keys, dt, is_leftclicking, mouse_pos):
         self.Move(keys, dt * 60)

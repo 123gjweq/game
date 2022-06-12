@@ -18,6 +18,10 @@ class Game(pyglet.window.Window):
         self.is_leftclicking = False
 
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
+        #List Of Other Players' PacketS
+        self.loopps = []
+        #List Of Other Players' Positions
+        self.loopp = []
 
         #player stuff
         self.player = Player(Vector2(0, 0))
@@ -26,17 +30,26 @@ class Game(pyglet.window.Window):
         self.n = Network()
         self.other_players = self.n.SendGet(self.player)
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
-        self.other_player_positions = []
 
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
+        self.dt = 0
 
     def ThreadedNetwork(self):
         while True:
             t1 = time.time()
             self.other_players = self.n.SendGet(self.player)
-            print((time.time() - t1))
-            time.sleep(.05 - (time.time() - t1))
+            for index, player in enumerate(self.other_players):
+                if len(self.loopps) < index + 1:
+                    self.loopps.append([(player.pos, time.time() - 1) for i in range(10)])
+                    self.loopp.append([(player.pos, time.time())])
+                self.loopps[index].insert(0, (player.pos, time.time()))
+                self.loopps[index].pop()
+            time_to_send = time.time() - t1
+            if .01 - time_to_send < .01:
+                time.sleep(.01 - time_to_send)
+            else:
+                time.sleep(.01)
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
@@ -58,10 +71,26 @@ class Game(pyglet.window.Window):
         self.n.Close()
         self.close()
 
+    def update_the_packets(self, player_index, packet_index):
+        last_packet = self.loopp[player_index][0]
+        new_packet = self.loopps[player_index][packet_index]
+        direction = (new_packet[0] - last_packet[0]).GetNormalized()
+        guess = 1
+        while True:
+            estimated_position = direction * guess * 5 + last_packet[0]
+            self.loopp[player_index].insert(0, (estimated_position, 0))
+            guess += 1
+            if abs(new_packet[0].length) - abs(estimated_position.length) < 6.5:
+                break
+        
+
+
+
     #update
     def update(self, dt, keys):
         self.dt = dt
         self.player.Update(keys, dt, self.is_leftclicking, self.mouse_pos)
+        
 
     #draw
     def on_draw(self):
@@ -71,19 +100,17 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
+            if len(self.loopp[index]) == 1:
+                for packet_index in range(len(self.loopps[index])):
+                    if time.time() - self.loopps[index][packet_index][1] > 0:
+                        self.update_the_packets(index, packet_index)
+                        break
+            
             #we add a list to other play positions to keep track of other players
-            if len(self.other_player_positions) <= index:
-                self.other_player_positions.append([player.pos.x, 1])
-
-            if self.other_player_positions[index][0] == player.pos:
-                self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y\
-                 = player.pos.x + (player.vel.x * self.other_player_positions[index][1]) + self.player.camera.x ,\
-                 player.pos.y + (player.vel.y * self.other_player_positions[index][1]) + self.player.camera.y
-                self.other_player_positions[index][1] += 1
-            else:
-                self.other_player_positions[index] = [player.pos, 1]
-                self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = player.pos.x + self.player.camera.x, player.pos.y + self.player.camera.y
+            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
+            self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
             self.PLAYERSPRITES[player.image_index].draw()
+            self.loopp[index].pop()
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
 
