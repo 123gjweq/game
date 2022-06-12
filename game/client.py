@@ -33,7 +33,10 @@ class Game(pyglet.window.Window):
 
     def ThreadedNetwork(self):
         while True:
+            t1 = time.time()
             self.other_players = self.n.SendGet(self.player)
+            print((time.time() - t1))
+            time.sleep(.05 - (time.time() - t1))
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
@@ -74,8 +77,8 @@ class Game(pyglet.window.Window):
 
             if self.other_player_positions[index][0] == player.pos:
                 self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y\
-                 = player.pos.x + (player.vel.x * self.other_player_positions[index][1] * self.dt * 60) + self.player.camera.x ,\
-                 player.pos.y + (player.vel.y * self.other_player_positions[index][1] * self.dt * 60) + self.player.camera.y
+                 = player.pos.x + (player.vel.x * self.other_player_positions[index][1]) + self.player.camera.x ,\
+                 player.pos.y + (player.vel.y * self.other_player_positions[index][1]) + self.player.camera.y
                 self.other_player_positions[index][1] += 1
             else:
                 self.other_player_positions[index] = [player.pos, 1]
