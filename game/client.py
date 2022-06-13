@@ -46,10 +46,10 @@ class Game(pyglet.window.Window):
                 self.loopps[index].insert(0, (player.pos, time.time()))
                 self.loopps[index].pop()
             time_to_send = time.time() - t1
-            if .01 - time_to_send < .01:
-                time.sleep(.01 - time_to_send)
+            if .1 - time_to_send < .01:
+                time.sleep(.1 - time_to_send)
             else:
-                time.sleep(.01)
+                time.sleep(.1)
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
