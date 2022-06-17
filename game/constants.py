@@ -11,7 +11,7 @@ def CenterImage(image):
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 
-ADDRESS = ("192.168.1.129", 1749)
+ADDRESS = ("192.168.1.105", 1749)
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')

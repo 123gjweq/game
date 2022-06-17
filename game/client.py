@@ -101,10 +101,6 @@ class Game(pyglet.window.Window):
         for index, player in enumerate(self.other_players):
             if len(self.loopp[index]) == 1:
                 self.update_the_packets(index, 0);
-
-            for bullet in player.gun.bullets:
-                # "predict" the bullet pos but we already know where its going to be next frame
-                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
         
 
     #draw
@@ -124,6 +120,9 @@ class Game(pyglet.window.Window):
 
         # other players
         for index, player in enumerate(self.other_players):
+            if len(self.loopp[index]) == 1:
+                self.update_the_packets(index, 0);
+
             #we add a list to other play positions to keep track of other players
             self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
             self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
@@ -134,6 +133,7 @@ class Game(pyglet.window.Window):
             GUNSPRITE.draw()
             # other players bullets
             for bullet in player.gun.bullets:
+                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
                 BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
                 BULLETSPRITE.draw()
 
