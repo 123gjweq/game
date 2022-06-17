@@ -46,7 +46,7 @@ class Game(pyglet.window.Window):
                 self.loopps[index].insert(0, (player.pos, time.time()))
                 self.loopps[index].pop()
             time_to_send = time.time() - t1
-            if .1 - time_to_send < .01:
+            if .1 - time_to_send > 0:
                 time.sleep(.1 - time_to_send)
             else:
                 time.sleep(.1)
@@ -74,6 +74,13 @@ class Game(pyglet.window.Window):
     def update_the_packets(self, player_index, packet_index):
         last_packet = self.loopp[player_index][0]
         new_packet = self.loopps[player_index][packet_index]
+        if (new_packet[0] - last_packet[0]).length <= 6:
+            if self.other_players[player_index].vel.length < 2:
+                estimated_position = self.other_players[player_index].vel.GetNormalized() * 5 + last_packet[0]
+                self.loopp[player_index].insert(0, (estimated_position, 0))
+            else:
+                self.loopp[player_index].insert(0, last_packet)
+            return
         direction = (new_packet[0] - last_packet[0]).GetNormalized()
         guess = 1
         while True:
@@ -101,10 +108,7 @@ class Game(pyglet.window.Window):
         # other players
         for index, player in enumerate(self.other_players):
             if len(self.loopp[index]) == 1:
-                for packet_index in range(len(self.loopps[index])):
-                    if time.time() - self.loopps[index][packet_index][1] > 0:
-                        self.update_the_packets(index, packet_index)
-                        break
+                self.update_the_packets(index, 0)
             
             #we add a list to other play positions to keep track of other players
             self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
