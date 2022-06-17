@@ -1,7 +1,7 @@
 import pyglet
 import socket
 import math
-from vector2 import Vector2
+from reusableClasses.vector2 import Vector2
 
 def CenterImage(image):
     image.anchor_x = math.floor(image.width / 2)
@@ -11,7 +11,7 @@ def CenterImage(image):
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 
-ADDRESS = ("192.168.1.129", 6348)
+ADDRESS = ("192.168.1.105", 1749)
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')
@@ -30,5 +30,14 @@ INJURED1SPRITE = pyglet.sprite.Sprite(INJURED1, 0, 0)
 INJURED0SPRITE = pyglet.sprite.Sprite(INJURED0, 0, 0)
 
 REFERENCEPOINT = pyglet.image.load('images/reference.png')
+
+GUNIMAGE = pyglet.image.load('images/gun.png')
+GUNIMAGE.anchor_x = math.floor(GUNIMAGE.width / 2)
+GUNIMAGE.anchor_y = 5
+GUNSPRITE = pyglet.sprite.Sprite(GUNIMAGE, 0, 0)
+
+BULLETIMAGE = pyglet.image.load('images/bullet.png')
+CenterImage(BULLETIMAGE)
+BULLETSPRITE = pyglet.sprite.Sprite(BULLETIMAGE, 0, 0)
 
 NO = Vector2()

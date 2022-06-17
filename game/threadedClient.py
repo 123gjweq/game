@@ -1,5 +1,7 @@
 import pickle
 
+from reusableClasses.collisions import Collision
+
 players = []
 
 def ThreadedClient(conn, ID):

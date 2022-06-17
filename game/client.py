@@ -5,7 +5,7 @@ import time
 from threading import Thread
 from player import Player
 from network import Network
-from vector2 import Vector2
+from reusableClasses.vector2 import Vector2
 from constants import *
 
 class Game(pyglet.window.Window):
@@ -46,10 +46,10 @@ class Game(pyglet.window.Window):
                 self.loopps[index].insert(0, (player.pos, time.time()))
                 self.loopps[index].pop()
             time_to_send = time.time() - t1
-            if .1 - time_to_send > 0:
-                time.sleep(.1 - time_to_send)
+            if .01 - time_to_send > 0:
+                time.sleep(.01 - time_to_send)
             else:
-                time.sleep(.1)
+                time.sleep(.01)
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
@@ -96,7 +96,7 @@ class Game(pyglet.window.Window):
     #update
     def update(self, dt, keys):
         self.dt = dt
-        self.player.Update(keys, dt, self.is_leftclicking, self.mouse_pos)
+        self.player.Update(keys, dt, self.mouse_pos, self.is_leftclicking)
         
 
     #draw
@@ -105,15 +105,35 @@ class Game(pyglet.window.Window):
         # our player
         self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = SCREENWIDTH / 2, SCREENHEIGHT / 2
         self.PLAYERSPRITES[self.player.image_index].draw()
+        # our gun
+        GUNSPRITE.x, GUNSPRITE.y = SCREENWIDTH / 2, SCREENHEIGHT / 2
+        GUNSPRITE.rotation = self.player.angle_looking
+        GUNSPRITE.draw()
+        # our bullets
+        for bullet in self.player.gun.bullets:
+            BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
+            BULLETSPRITE.draw()
+
         # other players
         for index, player in enumerate(self.other_players):
             if len(self.loopp[index]) == 1:
-                self.update_the_packets(index, 0)
+                self.update_the_packets(index, 0);
             
             #we add a list to other play positions to keep track of other players
             self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
             self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
             self.PLAYERSPRITES[player.image_index].draw()
+            # other players guns
+            GUNSPRITE.x, GUNSPRITE.y = self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
+            GUNSPRITE.rotation = player.angle_looking
+            GUNSPRITE.draw()
+            # other players bullets
+            for bullet in player.gun.bullets:
+                # "predict" the bullet pos but we already know where its going to be next frame
+                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
+                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
+                BULLETSPRITE.draw()
+
             self.loopp[index].pop()
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
