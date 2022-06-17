@@ -13,7 +13,7 @@ class Gun:
         self.bullet_speed = 20
         self.time_between_bullets = 0.3 # in seconds
         self.reload_time = 1 # in seconds
-        self.automatic = False
+        self.automatic = True
         self.distance_bullet_can_travel = 800
 
         self.time_last_shot = 0
