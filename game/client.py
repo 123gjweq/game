@@ -34,6 +34,7 @@ class Game(pyglet.window.Window):
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
         self.dt = 0
+        time.sleep(.2)
 
     def ThreadedNetwork(self):
         while True:
@@ -121,7 +122,7 @@ class Game(pyglet.window.Window):
         # other players
         for index, player in enumerate(self.other_players):
             if len(self.loopp[index]) == 1:
-                self.update_the_packets(index, 0);
+                self.update_the_packets(index, 0)
 
             #we add a list to other play positions to keep track of other players
             self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
