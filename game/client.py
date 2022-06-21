@@ -18,39 +18,45 @@ class Game(pyglet.window.Window):
         self.is_leftclicking = False
 
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
-        #List Of Other Players' PacketS
-        self.loopps = []
-        #List Of Other Players' Positions
-        self.loopp = []
 
         #player stuff
-        self.player = Player(Vector2(0, 0))
+        self.dt = 0
+        self.keys = {key.W: False, key.A: False, key.S: False, key.D: False}
 
         # connection
         self.n = Network()
-        self.other_players = self.n.SendGet(self.player)
+        self.ID = self.n.SendID()
+        self.other_players = self.n.SendGet((self.keys, self.dt, self.mouse_pos, self.is_leftclicking))
+        self.player = self.other_players[self.ID]
+        self.pos_counters = [self.ID] * len(self.other_players) #this will tell when we just recieved a packet
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
 
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
-        self.dt = 0
         time.sleep(.2)
 
     def ThreadedNetwork(self):
         while True:
             t1 = time.time()
-            self.other_players = self.n.SendGet(self.player)
-            for index, player in enumerate(self.other_players):
-                if len(self.loopps) < index + 1:
-                    self.loopps.append([(player.pos, time.time() - 1) for i in range(10)])
-                    self.loopp.append([(player.pos, time.time())])
-                self.loopps[index].insert(0, (player.pos, time.time()))
-                self.loopps[index].pop()
+            self.other_players = self.n.SendGet((self.keys, self.dt, self.mouse_pos, self.is_leftclicking))
+            self.player = self.other_players[self.ID]
+            self.calculate_pos_counters()
+
             time_to_send = time.time() - t1
-            if .01 - time_to_send > 0:
-                time.sleep(.01 - time_to_send)
+            if TIMEBETWEENSEND - time_to_send > 0:
+                time.sleep(TIMEBETWEENSEND - time_to_send)
             else:
-                time.sleep(.01)
+                time.sleep(TIMEBETWEENSEND)
+
+    def calculate_pos_counters(self):
+        for i in range(len(self.pos_counters)):
+            self.pos_counters[i] = 0
+        if len(self.pos_counters) < len(self.other_players):
+            self.pos_counters.append(0)
+
+    def interval_pos_counters(self):
+        for i in range(len(self.pos_counters)):
+            self.pos_counters[i] += 1
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
@@ -72,75 +78,39 @@ class Game(pyglet.window.Window):
         self.n.Close()
         self.close()
 
-    def update_the_packets(self, player_index, packet_index):
-        last_packet = self.loopp[player_index][0]
-        new_packet = self.loopps[player_index][packet_index]
-        if (new_packet[0] - last_packet[0]).length <= 6:
-            if self.other_players[player_index].vel.length < 2:
-                estimated_position = self.other_players[player_index].vel.GetNormalized() * 5 + last_packet[0]
-                self.loopp[player_index].insert(0, (estimated_position, 0))
-            else:
-                self.loopp[player_index].insert(0, last_packet)
-            return
-        direction = (new_packet[0] - last_packet[0]).GetNormalized()
-        guess = 1
-        while True:
-            estimated_position = direction * guess * 5 + last_packet[0]
-            self.loopp[player_index].insert(0, (estimated_position, 0))
-            guess += 1
-            if abs(new_packet[0].length) - abs(estimated_position.length) < 6.5:
-                break
         
-
-
-
     #update
     def update(self, dt, keys):
         self.dt = dt
-        self.player.Update(keys, dt, self.mouse_pos, self.is_leftclicking)
+        self.keys = keys
 
-        for index, player in enumerate(self.other_players):
-            if len(self.loopp[index]) == 1:
-                self.update_the_packets(index, 0);
         
 
     #draw
     def on_draw(self):
         self.clear()
-        # our player
-        self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        self.PLAYERSPRITES[self.player.image_index].draw()
-        # our gun
-        GUNSPRITE.x, GUNSPRITE.y = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        GUNSPRITE.rotation = self.player.angle_looking
-        GUNSPRITE.draw()
-        # our bullets
-        for bullet in self.player.gun.bullets:
-            BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
-            BULLETSPRITE.draw()
+        camera = self.player[0][self.pos_counters[self.ID]]
 
         # other players
         for index, player in enumerate(self.other_players):
-            if len(self.loopp[index]) == 1:
-                self.update_the_packets(index, 0)
 
             #we add a list to other play positions to keep track of other players
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
-            self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
-            self.PLAYERSPRITES[player.image_index].draw()
+            self.PLAYERSPRITES[player[4]].x, self.PLAYERSPRITES[player[4]].y =\
+            player[0][self.pos_counters[index]].x + self.player[6].x - camera.x, player[0][self.pos_counters[index]].y + self.player[6].y - camera.y
+            self.PLAYERSPRITES[player[4]].draw()
             # other players guns
-            GUNSPRITE.x, GUNSPRITE.y = self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
-            GUNSPRITE.rotation = player.angle_looking
+            GUNSPRITE.x, GUNSPRITE.y = player[0][self.pos_counters[index]].x + self.player[6].x - camera.x, player[0][self.pos_counters[index]].y + self.player[6].y - camera.y
+            GUNSPRITE.rotation = player[3]
             GUNSPRITE.draw()
             # other players bullets
-            for bullet in player.gun.bullets:
+            for bullet in player[5].bullets:
                 bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
-                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
+                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player[6].x, bullet.pos.y + self.player[6].y
                 BULLETSPRITE.draw()
 
-            self.loopp[index].pop()
         # reference point
-        REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
+        REFERENCEPOINT.blit(self.player[6].x - camera.x, self.player[6].y - camera.y)
+        self.interval_pos_counters()
 
 
 def main():

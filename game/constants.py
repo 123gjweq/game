@@ -12,6 +12,15 @@ SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 
 ADDRESS = ("192.168.1.129", 1749)
+TIMEBETWEENSEND = .3
+dict_of_stuff = {
+    .01: 5,
+    .05: 5,
+    .1: 5,
+    .2: 5,
+    .3: 5,
+}
+VEL_CONST = dict_of_stuff[TIMEBETWEENSEND]
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')
