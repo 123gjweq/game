@@ -8,6 +8,7 @@ from network import Network
 from reusableClasses.vector2 import Vector2
 from constants import *
 
+
 class Game(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -16,58 +17,45 @@ class Game(pyglet.window.Window):
         self.frame_rate = 1/120.0
         self.mouse_pos = Vector2()
         self.is_leftclicking = False
-
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
-
         #player stuff
-        self.dt = 0
-        self.keys = {key.W: False, key.A: False, key.S: False, key.D: False}
-
+        self.player = Player(Vector2(0, 0))
         # connection
         self.n = Network()
-        self.ID = self.n.SendID()
-        self.other_players = self.n.SendGet((self.keys, self.dt, self.mouse_pos, self.is_leftclicking))
-        self.player = self.other_players[self.ID]
-        self.pos_counters = [self.ID] * len(self.other_players) #this will tell when we just recieved a packet
+        self.other_players = self.n.SendGet(self.player)
+        self.other_player_predictions = [[]] * len(self.other_players)
+        self.other_player_counters = 0
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
-
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
-        time.sleep(.2)
+
 
     def ThreadedNetwork(self):
         while True:
             t1 = time.time()
-            self.other_players = self.n.SendGet((self.keys, self.dt, self.mouse_pos, self.is_leftclicking))
-            self.player = self.other_players[self.ID]
-            self.calculate_pos_counters()
+            self.other_players = self.n.SendGet(self.player)
 
-            time_to_send = time.time() - t1
-            if TIMEBETWEENSEND - time_to_send > 0:
-                time.sleep(TIMEBETWEENSEND - time_to_send)
+            self.other_player_counters = 0
+            self.player_prediction()
+            time_between = time.time() - t1
+            if time_between > 0:
+                time.sleep(TIMEBETWEENSEND - time_between)
             else:
                 time.sleep(TIMEBETWEENSEND)
-
-    def calculate_pos_counters(self):
-        for i in range(len(self.pos_counters)):
-            self.pos_counters[i] = 0
-        if len(self.pos_counters) < len(self.other_players):
-            self.pos_counters.append(0)
-
-    def interval_pos_counters(self):
-        for i in range(len(self.pos_counters)):
-            self.pos_counters[i] += 1
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos.x, self.mouse_pos.y = x, y
 
+
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         self.mouse_pos.x, self.mouse_pos.y = x, y
+
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == 1:
             self.is_leftclicking = True
+
 
     def on_mouse_release(self, x, y, button, modifiers):
         if button == 1:
@@ -78,51 +66,55 @@ class Game(pyglet.window.Window):
         self.n.Close()
         self.close()
 
-        
+
+
+    #player rediction stuff
+    def player_prediction(self):
+        self.other_player_predictions.clear()
+        for player in range(len(self.other_players)):
+            cur_player = self.other_players[player]
+            self.new_player_prediction_update()
+            for i in range(int(TIMEBETWEENSEND * 80)):
+                self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
+
+    def new_player_prediction_update(self):
+        if len(self.other_players) > len(self.other_player_predictions):
+            self.other_player_predictions.append([])
+
     #update
     def update(self, dt, keys):
         self.dt = dt
-        self.keys = keys
-
-        
+        self.player.Update(keys, dt, self.is_leftclicking, self.mouse_pos)
 
     #draw
     def on_draw(self):
         self.clear()
-        camera = self.player[0][self.pos_counters[self.ID]]
+        self.new_player_prediction_update()
 
+        REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
+        # our player
+        self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y =SCREENWIDTH / 2, SCREENHEIGHT / 2
+        self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
-
-            #we add a list to other play positions to keep track of other players
-            self.PLAYERSPRITES[player[4]].x, self.PLAYERSPRITES[player[4]].y =\
-            player[0][self.pos_counters[index]].x + self.player[6].x - camera.x, player[0][self.pos_counters[index]].y + self.player[6].y - camera.y
-            self.PLAYERSPRITES[player[4]].draw()
-            # other players guns
-            GUNSPRITE.x, GUNSPRITE.y = player[0][self.pos_counters[index]].x + self.player[6].x - camera.x, player[0][self.pos_counters[index]].y + self.player[6].y - camera.y
-            GUNSPRITE.rotation = player[3]
-            GUNSPRITE.draw()
-            # other players bullets
-            for bullet in player[5].bullets:
-                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
-                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player[6].x, bullet.pos.y + self.player[6].y
-                BULLETSPRITE.draw()
-
+            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
+            self.other_player_predictions[index][self.other_player_counters].x + self.player.camera.x,\
+            self.other_player_predictions[index][self.other_player_counters].y + self.player.camera.y
+            self.PLAYERSPRITES[player.image_index].draw()
         # reference point
-        REFERENCEPOINT.blit(self.player[6].x - camera.x, self.player[6].y - camera.y)
-        self.interval_pos_counters()
+        REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
+
+        if len(self.other_player_predictions) > 0:
+            if len(self.other_player_predictions[0]) > self.other_player_counters + 1:
+                self.other_player_counters += 1
 
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title
     screen.set_vsync(True)
-
     keys = key.KeyStateHandler()
     screen.push_handlers(keys)
-
     pyglet.clock.schedule_interval(screen.update, screen.frame_rate, keys)
     pyglet.app.run()
-
     return 0
-
 main()
