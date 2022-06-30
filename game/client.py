@@ -29,16 +29,18 @@ class Game(pyglet.window.Window):
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
         self.dt = 1
+        self.time_measuerment = 0
 
 
     def ThreadedNetwork(self):
         while True:
-            t1 = time.time()
             self.other_players = self.n.SendGet(self.player)
 
-            self.player_prediction()
-            self.other_player_counters = 0
-            time_between = time.time() - t1
+            if time.time() - self.time_measuerment > TIMEBETWEENSEND:
+                self.player_prediction()
+                self.other_player_counters = 0
+                self.time_measuerment = time.time()
+            
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
