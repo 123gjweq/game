@@ -35,11 +35,8 @@ class Game(pyglet.window.Window):
     def ThreadedNetwork(self):
         while True:
             self.other_players = self.n.SendGet(self.player)
-
-            if time.time() - self.time_measuerment > TIMEBETWEENSEND:
-                self.player_prediction()
-                self.other_player_counters = 0
-                self.time_measuerment = time.time()
+            self.player_prediction()
+            self.other_player_counters = 0
             
 
     #events
@@ -73,7 +70,7 @@ class Game(pyglet.window.Window):
             cur_player = self.other_players[player]
             self.new_player_prediction_update()
             self.other_player_predictions[player] = []
-            for i in range(int(TIMEBETWEENSEND * 80 * 60 * self.dt)):
+            for i in range(int(TIMEBETWEENSEND * 60 * 60 * self.dt)):
                 self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
 
     def new_player_prediction_update(self):
