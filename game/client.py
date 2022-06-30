@@ -1,6 +1,6 @@
 import pyglet
 from pyglet.window import key
-import pickle
+from random import randrange
 import time
 from threading import Thread
 from player import Player
@@ -28,6 +28,7 @@ class Game(pyglet.window.Window):
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
+        self.drawing = False
 
 
     def ThreadedNetwork(self):
@@ -35,8 +36,8 @@ class Game(pyglet.window.Window):
             t1 = time.time()
             self.other_players = self.n.SendGet(self.player)
 
-            self.other_player_counters = 0
             self.player_prediction()
+            self.other_player_counters = 0
             time_between = time.time() - t1
             if time_between > 0:
                 time.sleep(TIMEBETWEENSEND - time_between)
@@ -70,12 +71,17 @@ class Game(pyglet.window.Window):
 
     #player rediction stuff
     def player_prediction(self):
-        self.other_player_predictions.clear()
         for player in range(len(self.other_players)):
             cur_player = self.other_players[player]
             self.new_player_prediction_update()
-            for i in range(int(TIMEBETWEENSEND * 80)):
-                self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
+            if len(self.other_player_predictions[player]) > 0 and randrange(-1, 20):
+                number = self.other_player_counters + 1 if self.drawing else self.other_player_counters
+                self.other_player_predictions[player] = [self.other_player_predictions[player][number]]
+            else:
+                self.other_player_predictions[player] = [cur_player.pos]
+            for i in range(int(TIMEBETWEENSEND * 120)):
+                self.other_player_predictions[player].append(self.other_player_predictions[player][0] + cur_player.lvel * i)
+            self.other_player_predictions[player].pop(0)
 
     def new_player_prediction_update(self):
         if len(self.other_players) > len(self.other_player_predictions):
@@ -88,6 +94,7 @@ class Game(pyglet.window.Window):
 
     #draw
     def on_draw(self):
+        self.drawing = True
         self.clear()
         self.new_player_prediction_update()
 
@@ -107,6 +114,7 @@ class Game(pyglet.window.Window):
         if len(self.other_player_predictions) > 0:
             if len(self.other_player_predictions[0]) > self.other_player_counters + 1:
                 self.other_player_counters += 1
+        self.drawing = False
 
 
 def main():
