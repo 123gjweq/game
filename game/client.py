@@ -39,10 +39,6 @@ class Game(pyglet.window.Window):
             self.player_prediction()
             self.other_player_counters = 0
             time_between = time.time() - t1
-            if TIMEBETWEENSEND - time_between > 0:
-                time.sleep(TIMEBETWEENSEND - time_between)
-            else:
-                time.sleep(TIMEBETWEENSEND)
 
     #events
     def on_mouse_motion(self, x, y, dx, dy):
