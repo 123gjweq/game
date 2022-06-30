@@ -28,7 +28,6 @@ class Game(pyglet.window.Window):
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
-        self.drawing = False
 
 
     def ThreadedNetwork(self):
@@ -74,16 +73,9 @@ class Game(pyglet.window.Window):
         for player in range(len(self.other_players)):
             cur_player = self.other_players[player]
             self.new_player_prediction_update()
-            if len(self.other_player_predictions[player]) > 0 and randrange(-1, 20):
-                number = self.other_player_counters + 1 if self.drawing else self.other_player_counters
-                if number > len(self.other_player_predictions[player]) + 1:
-                    number = -1
-                self.other_player_predictions[player] = [self.other_player_predictions[player][number]]
-            else:
-                self.other_player_predictions[player] = [cur_player.pos]
-            for i in range(int(TIMEBETWEENSEND * 120)):
-                self.other_player_predictions[player].append(self.other_player_predictions[player][0] + cur_player.lvel * i)
-            self.other_player_predictions[player].pop(0)
+            self.other_player_predictions[player] = []
+            for i in range(int(TIMEBETWEENSEND * 80)):
+                self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
 
     def new_player_prediction_update(self):
         if len(self.other_players) > len(self.other_player_predictions):
@@ -96,7 +88,6 @@ class Game(pyglet.window.Window):
 
     #draw
     def on_draw(self):
-        self.drawing = True
         self.clear()
         self.new_player_prediction_update()
 
@@ -106,9 +97,15 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
-            self.other_player_predictions[index][self.other_player_counters].x + self.player.camera.x,\
-            self.other_player_predictions[index][self.other_player_counters].y + self.player.camera.y
+            if self.other_player_counters - 1 < len(self.other_player_predictions[index]):
+                cur_pos = self.other_player_predictions[index][self.other_player_counters].x + self.player.camera.x,\
+                self.other_player_predictions[index][self.other_player_counters].y + self.player.camera.y
+            else:
+                cur_pos = self.other_player_predictions[index][-1].x + self.player.camera.x,\
+                self.other_player_predictions[index][-1].y + self.player.camera.y
+
+            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = cur_pos
+            
             self.PLAYERSPRITES[player.image_index].draw()
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
@@ -116,7 +113,6 @@ class Game(pyglet.window.Window):
         if len(self.other_player_predictions) > 0:
             if len(self.other_player_predictions[0]) > self.other_player_counters + 1:
                 self.other_player_counters += 1
-        self.drawing = False
 
 
 def main():
