@@ -74,7 +74,7 @@ class Game(pyglet.window.Window):
             cur_player = self.other_players[player]
             self.new_player_prediction_update()
             self.other_player_predictions[player] = []
-            for i in range(int(TIMEBETWEENSEND * 80)):
+            for i in range(int(TIMEBETWEENSEND * 60)):
                 self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
 
     def new_player_prediction_update(self):
