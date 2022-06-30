@@ -8,7 +8,7 @@ def CenterImage(image):
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 
-ADDRESS = (socket.gethostbyname(socket.gethostname()), 1234)
+ADDRESS = ("192.168.1.121", 1234)
 
 TIMEBETWEENSEND = .05
 

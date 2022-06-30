@@ -39,7 +39,7 @@ class Game(pyglet.window.Window):
             self.player_prediction()
             self.other_player_counters = 0
             time_between = time.time() - t1
-            if time_between > 0:
+            if TIMEBETWEENSEND - time_between > 0:
                 time.sleep(TIMEBETWEENSEND - time_between)
             else:
                 time.sleep(TIMEBETWEENSEND)
@@ -76,6 +76,8 @@ class Game(pyglet.window.Window):
             self.new_player_prediction_update()
             if len(self.other_player_predictions[player]) > 0 and randrange(-1, 20):
                 number = self.other_player_counters + 1 if self.drawing else self.other_player_counters
+                if number > len(self.other_player_predictions[player]) + 1:
+                    number = -1
                 self.other_player_predictions[player] = [self.other_player_predictions[player][number]]
             else:
                 self.other_player_predictions[player] = [cur_player.pos]
