@@ -30,11 +30,20 @@ class Game(pyglet.window.Window):
         networkThread.start()
         self.dt = 1
         self.time_measuerment = 0
+        self.loopps = []
+        #List Of Other Players' Positions
+        self.loopp = []
 
 
     def ThreadedNetwork(self):
         while True:
             self.other_players = self.n.SendGet(self.player)
+            for index, player in enumerate(self.other_players):
+                if len(self.loopps) < index + 1:
+                    self.loopps.append([(player.pos, time.time() - 1) for i in range(10)])
+                    self.loopp.append([(player.pos, time.time())])
+                self.loopps[index].insert(0, (player.pos, time.time()))
+                self.loopps[index].pop()
             
 
     #events
@@ -63,6 +72,24 @@ class Game(pyglet.window.Window):
 
 
     #player rediction stuff
+    def update_the_packets(self, player_index, packet_index):
+        last_packet = self.loopp[player_index][0]
+        new_packet = self.loopps[player_index][packet_index]
+        if (new_packet[0] - last_packet[0]).length <= 6:
+            if self.other_players[player_index].vel.length < 2:
+                estimated_position = self.other_players[player_index].vel.GetNormalized() * 5 + last_packet[0]
+                self.loopp[player_index].insert(0, (estimated_position, 0))
+            else:
+                self.loopp[player_index].insert(0, last_packet)
+            return
+        direction = (new_packet[0] - last_packet[0]).GetNormalized()
+        guess = 1
+        while True:
+            estimated_position = direction * guess * 5 + last_packet[0]
+            self.loopp[player_index].insert(0, (estimated_position, 0))
+            guess += 1
+            if abs(new_packet[0].length) - abs(estimated_position.length) < 6.5:
+                break
 
     #update
     def update(self, dt, keys):
@@ -73,24 +100,18 @@ class Game(pyglet.window.Window):
     def on_draw(self):
         self.clear()
 
-        REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
-        # our player
-        self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y =SCREENWIDTH / 2, SCREENHEIGHT / 2
+        self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = 750, 450
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
-
+            if len(self.loopp[index]) == 1:
+                self.update_the_packets(index, 0)
             self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
-            player.pos.x + self.player.camera.x,\
-            player.pos.y + self.player.camera.y
-            
+            self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
             self.PLAYERSPRITES[player.image_index].draw()
+            self.loopp[index].pop()
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
-
-        if len(self.other_player_predictions) > 0:
-            if len(self.other_player_predictions[0]) > self.other_player_counters + 1:
-                self.other_player_counters += 1
 
 
 def main():
