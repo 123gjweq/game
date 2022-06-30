@@ -35,8 +35,6 @@ class Game(pyglet.window.Window):
     def ThreadedNetwork(self):
         while True:
             self.other_players = self.n.SendGet(self.player)
-            self.player_prediction()
-            self.other_player_counters = 0
             
 
     #events
@@ -65,17 +63,6 @@ class Game(pyglet.window.Window):
 
 
     #player rediction stuff
-    def player_prediction(self):
-        for player in range(len(self.other_players)):
-            cur_player = self.other_players[player]
-            self.new_player_prediction_update()
-            self.other_player_predictions[player] = []
-            for i in range(int(TIMEBETWEENSEND * 60 * 60 * self.dt)):
-                self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
-
-    def new_player_prediction_update(self):
-        if len(self.other_players) > len(self.other_player_predictions):
-            self.other_player_predictions.append([])
 
     #update
     def update(self, dt, keys):
@@ -85,7 +72,6 @@ class Game(pyglet.window.Window):
     #draw
     def on_draw(self):
         self.clear()
-        self.new_player_prediction_update()
 
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
         # our player
@@ -93,14 +79,10 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
-            if self.other_player_counters - 1 <= len(self.other_player_predictions[index]):
-                cur_pos = self.other_player_predictions[index][self.other_player_counters].x + self.player.camera.x,\
-                self.other_player_predictions[index][self.other_player_counters].y + self.player.camera.y
-            else:
-                cur_pos = self.other_player_predictions[index][-1].x + self.player.camera.x,\
-                self.other_player_predictions[index][-1].y + self.player.camera.y
 
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = cur_pos
+            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
+            player.pos.x + self.player.camera.x,\
+            player.pos.y + self.player.camera.y
             
             self.PLAYERSPRITES[player.image_index].draw()
         # reference point
