@@ -10,7 +10,7 @@ SCREENHEIGHT = 900
 
 ADDRESS = ("192.168.1.121", 1234)
 
-TIMEBETWEENSEND = .05
+TIMEBETWEENSEND = .1
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')

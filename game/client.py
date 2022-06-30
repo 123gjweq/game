@@ -28,6 +28,7 @@ class Game(pyglet.window.Window):
         #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
         networkThread = Thread(target=self.ThreadedNetwork, args=())
         networkThread.start()
+        self.dt = 1
 
 
     def ThreadedNetwork(self):
@@ -74,7 +75,7 @@ class Game(pyglet.window.Window):
             cur_player = self.other_players[player]
             self.new_player_prediction_update()
             self.other_player_predictions[player] = []
-            for i in range(int(TIMEBETWEENSEND * 60)):
+            for i in range(int(TIMEBETWEENSEND * 80 * 60 * self.dt)):
                 self.other_player_predictions[player].append(cur_player.pos + cur_player.lvel * i)
 
     def new_player_prediction_update(self):
@@ -97,7 +98,7 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[self.player.image_index].draw()
         # other players
         for index, player in enumerate(self.other_players):
-            if self.other_player_counters - 1 < len(self.other_player_predictions[index]):
+            if self.other_player_counters - 1 <= len(self.other_player_predictions[index]):
                 cur_pos = self.other_player_predictions[index][self.other_player_counters].x + self.player.camera.x,\
                 self.other_player_predictions[index][self.other_player_counters].y + self.player.camera.y
             else:
