@@ -26,4 +26,12 @@ INJURED2SPRITE = pyglet.sprite.Sprite(INJURED2, 0, 0)
 INJURED1SPRITE = pyglet.sprite.Sprite(INJURED1, 0, 0)
 INJURED0SPRITE = pyglet.sprite.Sprite(INJURED0, 0, 0)
 REFERENCEPOINT = pyglet.image.load('images/reference.png')
+GUNIMAGE = pyglet.image.load('images/gun.png')
+GUNIMAGE.anchor_x = math.floor(GUNIMAGE.width / 2)
+GUNIMAGE.anchor_y = 5
+GUNSPRITE = pyglet.sprite.Sprite(GUNIMAGE, 0, 0)
+
+BULLETIMAGE = pyglet.image.load('images/bullet.png')
+CenterImage(BULLETIMAGE)
+BULLETSPRITE = pyglet.sprite.Sprite(BULLETIMAGE, 0, 0)
 NO = Vector2()

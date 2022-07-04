@@ -98,18 +98,44 @@ class Game(pyglet.window.Window):
 
     #draw
     def on_draw(self):
+        
         self.clear()
 
         self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = 750, 450
         self.PLAYERSPRITES[self.player.image_index].draw()
+
+        GUNSPRITE.x, GUNSPRITE.y = SCREENWIDTH / 2, SCREENHEIGHT / 2
+        GUNSPRITE.rotation = self.player.angle_looking
+        GUNSPRITE.draw()
+        
+        # our bullets
+        for bullet in self.player.gun.bullets:
+            BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
+            BULLETSPRITE.draw()
+
+
         # other players
         for index, player in enumerate(self.other_players):
             if len(self.loopp[index]) == 1:
                 self.update_the_packets(index, 0)
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y =\
-            self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
+
+            for bullet in player.gun.bullets:
+                # "predict" the bullet pos but we already know where its going to be next frame
+                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
+                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
+                BULLETSPRITE.draw()
+
+            player_pos = self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
+
+            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = player_pos
+            
             self.PLAYERSPRITES[player.image_index].draw()
             self.loopp[index].pop()
+
+            GUNSPRITE.x, GUNSPRITE.y = player_pos
+            GUNSPRITE.rotation = player.angle_looking
+            GUNSPRITE.draw()
+            # other players bullet
         # reference point
         REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
 
