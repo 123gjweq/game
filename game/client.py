@@ -24,6 +24,11 @@ class Game(pyglet.window.Window):
         #player stuff
         self.player = Player(Vector2(0, 0))
 
+        #player prediction stuff
+        self.dt = 1 #delta time
+        self.loopps = [] #list of other players' (previous) packets
+        self.loopp = [] #list of other players' positions
+
         # connection
         self.n = Network()
         self.other_players = self.n.SendGet(self.player) #send player
@@ -31,16 +36,13 @@ class Game(pyglet.window.Window):
         networkThread = Thread(target=self.ThreadedNetwork, args=()) #a threaded connection between client and server
         networkThread.start()
 
+        #more player prediction stuff
+        self.other_player_predictions = [[]] * len(self.other_players) #list of other players predicted positions
+        self.other_player_counters = 0 #increment self.other_player_predictions
+
         #initialize map and walls
         for wall in self.map:
             Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
-
-        #player prediction stuff
-        self.dt = 1 #delta time
-        self.loopps = [] #list of other players' (previous) packets
-        self.loopp = [] #list of other players' positions
-        self.other_player_predictions = [[]] * len(self.other_players) #list of other players predicted positions
-        self.other_player_counters = 0 #increment self.other_player_predictions
 
 
     def ThreadedNetwork(self):
