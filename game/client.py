@@ -6,11 +6,13 @@ from threading import Thread
 from player import Player
 from network import Network
 from reusableClasses.vector2 import Vector2
+from wall import Wall
 from constants import *
 
 
 class Game(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
+        #pygame stuff
         super().__init__(*args, **kwargs)
         pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
         pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
@@ -18,21 +20,27 @@ class Game(pyglet.window.Window):
         self.mouse_pos = Vector2()
         self.is_leftclicking = False
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
+
         #player stuff
         self.player = Player(Vector2(0, 0))
+
         # connection
         self.n = Network()
-        self.other_players = self.n.SendGet(self.player)
-        self.other_player_predictions = [[]] * len(self.other_players)
-        self.other_player_counters = 0
-        #this is for making it smooth. I store players other position, check if it is equal, and then upadte vel
-        networkThread = Thread(target=self.ThreadedNetwork, args=())
+        self.other_players = self.n.SendGet(self.player) #send player
+        self.map = self.n.SendMap("mapRequest") #request map
+        networkThread = Thread(target=self.ThreadedNetwork, args=()) #a threaded connection between client and server
         networkThread.start()
-        self.dt = 1
-        self.time_measuerment = 0
-        self.loopps = []
-        #List Of Other Players' Positions
-        self.loopp = []
+
+        #initialize map and walls
+        for wall in self.map:
+            Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
+
+        #player prediction stuff
+        self.dt = 1 #delta time
+        self.loopps = [] #list of other players' (previous) packets
+        self.loopp = [] #list of other players' positions
+        self.other_player_predictions = [[]] * len(self.other_players) #list of other players predicted positions
+        self.other_player_counters = 0 #increment self.other_player_predictions
 
 
     def ThreadedNetwork(self):
@@ -101,6 +109,16 @@ class Game(pyglet.window.Window):
         
         self.clear()
 
+        #first and foremost, we want to draw walls
+        for i in range(0, len(Wall.wallBatch), 1):
+            # update wall pos with camera
+            wall = Wall.walls[i]
+            #this if statement and the next check if the wall is on the screen.
+            if wall.init_x < self.player.pos.x + 750 and wall.init_x + wall.width > self.player.pos.x - 750:
+                if wall.init_y < self.player.pos.y + 450 and wall.init_y + wall.height > self.player.pos.y - 450:
+                    Wall.wallBatch[i].x, Wall.wallBatch[i].y = Wall.walls[i].pos.x + self.player.camera.x, Wall.walls[i].pos.y + self.player.camera.y
+                    Wall.wallBatch[i].draw()
+
         self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = 750, 450
         self.PLAYERSPRITES[self.player.image_index].draw()
 
@@ -136,8 +154,6 @@ class Game(pyglet.window.Window):
             GUNSPRITE.rotation = player.angle_looking
             GUNSPRITE.draw()
             # other players bullet
-        # reference point
-        REFERENCEPOINT.blit(self.player.camera.x, self.player.camera.y)
 
 
 def main():

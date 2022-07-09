@@ -1,11 +1,19 @@
 import pickle
+from loadmap import LoadMap
 
 players = []
+walls = LoadMap("maps/testMap.txt")
 
 def ThreadedClient(conn, ID):
+    #initialize player
     player = pickle.loads(conn.recv(10000))
     conn.sendall(pickle.dumps(players))
     players.append(player)
+
+    #send wall map to player
+    mapRequest = pickle.loads(conn.recv(100))
+    if mapRequest == "mapRequest":
+        conn.send(pickle.dumps(walls))
 
     while True:
         client_player = pickle.loads(conn.recv(10000))

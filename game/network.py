@@ -13,9 +13,13 @@ class Network:
         self.s.send(pickle.dumps("ID"))
         return pickle.loads(self.s.recv(1000))
 
+    def SendMap(self, mapRequest):
+        self.s.send(pickle.dumps(mapRequest))
+        return pickle.loads(self.s.recv(10000))
+
     def SendGet(self, clientData):
         self.s.send(pickle.dumps(clientData))
-        return pickle.loads(self.s.recv(60000))
+        return pickle.loads(self.s.recv(10000))
 
     def SendClose(self):
         self.s.send(pickle.dumps("Quit"))

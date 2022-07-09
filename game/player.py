@@ -1,8 +1,10 @@
 from pyglet.window import key
 import math
 from reusableClasses.vector2 import Vector2
+from reusableClasses.collisions import Collision
 from constants import *
 from gun import Gun
+from wall import Wall
 
 class Player:
     def __init__(self, pos):
@@ -55,6 +57,15 @@ class Player:
 
         self.pos += self.vel * dt
         self.camera -= self.vel * dt
+
+        #check if there are any collisions with the walls
+        for wall in Wall.walls:
+            if wall.pos.x < self.pos.x + 750 and wall.pos.x + wall.width > self.pos.x - 750:
+                if wall.pos.y < self.pos.y + 450 and wall.pos.y + wall.height > self.pos.y - 450:
+                    isCollide_pos = Collision.CircleOnRect(self.pos, 25, wall.pos, wall.width, wall.height)
+                    if isCollide_pos[0]:
+                        self.pos = isCollide_pos[1]
+                        self.camera.x, self.camera.y = -self.pos.x + 750, -self.pos.y + 450
 
 
     def Update(self, keys, dt, is_leftclicking, mouse_pos):

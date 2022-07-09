@@ -37,10 +37,15 @@ class Collision:
         nearest.x = max(rPos.x, min(circlePos.x, rPos.x + rWidth))
         nearest.y = max(rPos.y, min(circlePos.y, rPos.y + rHeight))
 
-        if (nearest - circlePos).length <= circleRadius:
-            return True
+        clampingPoint = Vector2(nearest.x, nearest.y)
+        vectorToNearest = clampingPoint - circlePos
 
-        return False
+        overlap = circleRadius - vectorToNearest.length
+
+        if overlap > 0:
+            circlePos -= vectorToNearest.GetNormalized() * overlap
+            return (True, circlePos)
+        return (False, circlePos)
 
     @staticmethod
     def RectOnRect(r1Pos, r1w, r1h, r2Pos, r2w, r2h):  # this function takes in bottom left points
