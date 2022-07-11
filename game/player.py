@@ -7,7 +7,7 @@ from gun import Gun
 from wall import Wall
 
 class Player:
-    def __init__(self, pos):
+    def __init__(self, pos, ID):
         self.pos = pos
         self.vel = Vector2()
         self.health = 100
@@ -19,6 +19,7 @@ class Player:
         self.camera = Vector2(750, 450)
         self.gun = Gun(self.pos)
         self.angle_looking = 0
+        self.bullets_to_delete = {"ID": ID, "bullets": set()}
 
     def Move(self, keys, dt):
         """

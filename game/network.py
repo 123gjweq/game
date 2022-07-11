@@ -9,9 +9,9 @@ class Network:
         self.s.connect(ADDRESS)
         print("Connected to server")
 
-    def SendID(self):
-        self.s.send(pickle.dumps("ID"))
-        return pickle.loads(self.s.recv(1000))
+    def SendID(self, ID):
+        self.s.send(pickle.dumps(ID))
+        return pickle.loads(self.s.recv(100))
 
     def SendMap(self, mapRequest):
         self.s.send(pickle.dumps(mapRequest))

@@ -1,4 +1,5 @@
 import time
+from random import randrange
 
 from constants import *
 
@@ -21,7 +22,7 @@ class Gun:
         self.semi_automatic_check_if_shoot = True
 
     def Update(self, pos, mouse_pos, is_leftclicking, dt):
-        self.pos =  pos
+        self.pos = pos
         
         # check if you should shoot
         # automatic check
@@ -54,6 +55,7 @@ class Bullet:
         self.dir = dir.GetNormalized()
         self.distance_can_travel = 0
         self.speed = speed
+        self.ID = randrange(500)
 
     def Move(self, dt):
         movement = (self.dir * self.speed) * dt
