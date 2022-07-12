@@ -16,6 +16,6 @@ while True:
 
     print(f"player {addr} connected")
 
-    clientThread = Thread(target=ThreadedClient, args=(conn, ID))
+    # this automatically starts the thread
+    threaded_client = ThreadedClient(conn, ID)
     ID += 1
-    clientThread.start()

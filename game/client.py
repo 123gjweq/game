@@ -2,7 +2,6 @@ import pyglet
 from pyglet.window import key
 from threading import Thread
 from random import randrange
-import pickle
 import time
 
 from player import Player
@@ -35,9 +34,12 @@ class Game(pyglet.window.Window):
         # get players
         self.client_data = ClientData()
         self.server_data = self.n.GetPlayers("wall_request")
+        
 
-        self.networkThread = Thread(target=self.ThreadedNetwork, args=())
-        self.networkThread.start()
+        self.buffer = []
+
+        self.network_thread = Thread(target=self.ThreadedNetwork, args=())
+        self.network_thread.start()
 
         # initialize map and walls
         # for wall in self.map:
@@ -54,6 +56,7 @@ class Game(pyglet.window.Window):
             lastFrame = currentTime
 
             self.client_data.dt = dt
+
             self.server_data = self.n.SendGet(self.client_data)
             time.sleep(0.01)
 
@@ -86,6 +89,12 @@ class Game(pyglet.window.Window):
         self.client_data.keys = keys
         self.client_data.left_clicking = self.left_clicking
         self.client_data.mouse_pos = self.mouse_pos
+
+        # add input to buffer
+        self.buffer.append([self.client_data, time.time()])
+        # check if buffer has been there too long
+        if time.time() - self.buffer[0][1] > 0.3:
+            self.buffer.pop(0)
 
     #draw
     def on_draw(self):
