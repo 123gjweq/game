@@ -8,7 +8,7 @@ def CenterImage(image):
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 
-ADDRESS = ("192.168.2.137", 1234)
+ADDRESS = ("192.168.1.133", 1234)
 
 INJURED4 = pyglet.image.load('images/playerInjured4.png')
 INJURED3 = pyglet.image.load('images/playerInjured3.png')
@@ -34,4 +34,3 @@ GUNSPRITE = pyglet.sprite.Sprite(GUNIMAGE, 0, 0)
 BULLETIMAGE = pyglet.image.load('images/bullet.png')
 CenterImage(BULLETIMAGE)
 BULLETSPRITE = pyglet.sprite.Sprite(BULLETIMAGE, 0, 0)
-NO = Vector2()

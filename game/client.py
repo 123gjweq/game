@@ -1,14 +1,18 @@
 import pyglet
 from pyglet.window import key
-from random import randrange
-import time
 from threading import Thread
+from random import randrange
+import pickle
+import time
+
 from player import Player
 from network import Network
+from wall import Wall
+from sentStuff import *
+from constants import *
+
 from reusableClasses.vector2 import Vector2
 from reusableClasses.collisions import Collision
-from wall import Wall
-from constants import *
 
 
 class Game(pyglet.window.Window):
@@ -19,67 +23,40 @@ class Game(pyglet.window.Window):
         pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA, pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
         self.frame_rate = 1/120.0
         self.mouse_pos = Vector2()
-        self.is_leftclicking = False
+        self.left_clicking = False
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
 
         # connection
         self.n = Network()
-        self.ID = self.n.SendID("ID") #get the ID that the server has assigned to the client
-        self.map = self.n.SendMap("mapRequest") #request map
+        # get ID
+        self.ID = self.n.GetID("ID")
+        # get map
+        self.map = self.n.GetMap("map_request")
+        # get players
+        self.client_data = ClientData()
+        self.server_data = self.n.GetPlayers("wall_request")
 
-        #initialize player class and create threaded connection w/ server
-        self.player = Player(Vector2(0, 0), self.ID)
-        self.other_players = self.n.SendGet(self.player) #send player
-        networkThread = Thread(target=self.ThreadedNetwork, args=()) #a threaded connection between client and server
-        networkThread.start()
+        self.networkThread = Thread(target=self.ThreadedNetwork, args=())
+        self.networkThread.start()
 
-        #player prediction stuff
-        self.dt = 1 #delta time
-        self.loopps = [] #list of other players' (previous) packets
-        self.loopp = [] #list of other players' positions
-        self.other_player_predictions = [[]] * len(self.other_players) #list of other players predicted positions
-        self.other_player_counters = 0 #increment self.other_player_predictions
+        # initialize map and walls
+        # for wall in self.map:
+            # Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
 
-        #bullets to ignore (aka bullets that have already hit a player)
-        self.bullets_to_ignore = set()
-
-        #initialize map and walls
-        for wall in self.map:
-            Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
-
-    #---NETWORKING STUFF---
+    # ---NETWORKING STUFF---
     def ThreadedNetwork(self):
+        
+        lastFrame = time.time()
+
         while True:
-            self.other_players = self.n.SendGet(self.player)
-            for index, player in enumerate(self.other_players):
-                if len(self.loopps) < index + 1:
-                    self.loopps.append([(player.pos, time.time() - 1) for i in range(10)])
-                    self.loopp.append([(player.pos, time.time())])
-                self.loopps[index].insert(0, (player.pos, time.time()))
-                self.loopps[index].pop()
+            currentTime = time.time()
+            dt = currentTime - lastFrame
+            lastFrame = currentTime
 
-                self.bullets_to_ignore.update(player.bullets_to_delete["bullets"])
+            self.client_data.dt = dt
+            self.server_data = self.n.SendGet(self.client_data)
+            time.sleep(0.01)
 
-
-    def update_the_packets(self, player_index, packet_index):
-        last_packet = self.loopp[player_index][0]
-        new_packet = self.loopps[player_index][packet_index]
-        if (new_packet[0] - last_packet[0]).length <= 6:
-            if self.other_players[player_index].vel.length < 2:
-                estimated_position = self.other_players[player_index].vel.GetNormalized() * 5 + last_packet[0]
-                self.loopp[player_index].insert(0, (estimated_position, 0))
-            else:
-                self.loopp[player_index].insert(0, last_packet)
-            return
-        direction = (new_packet[0] - last_packet[0]).GetNormalized()
-        guess = 1
-        while True:
-            estimated_position = direction * guess * 5 + last_packet[0]
-            self.loopp[player_index].insert(0, (estimated_position, 0))
-            guess += 1
-            if abs(new_packet[0].length) - abs(estimated_position.length) < 6.5:
-                break
-    
     #---EVENTS---
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos.x, self.mouse_pos.y = x, y
@@ -91,91 +68,59 @@ class Game(pyglet.window.Window):
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == 1:
-            self.is_leftclicking = True
+            self.left_clicking = True
 
 
     def on_mouse_release(self, x, y, button, modifiers):
         if button == 1:
-            self.is_leftclicking = False
+            self.left_clicking = False
     
     def on_close(self):
         self.n.SendClose()
         self.n.Close()
         self.close()
 
-    #check for bullet collisions
-    def is_colliding(self):
-        for player in self.other_players:
-            for bullet in player.gun.bullets:
-                if Collision.PointOnCircle(bullet.pos, self.player.pos, 25) and bullet.ID not in self.bullets_to_ignore:
-                    #update player's health and bullets to delete list
-                    self.player.health -= 10
-                    self.player.bullets_to_delete["bullets"].add(bullet.ID)
-                    self.bullets_to_ignore.add(bullet.ID)
-
-
-
     #---UPDATE---
     #update
-    def update(self, dt, keys):
-        self.dt = dt
-        self.is_colliding()
-        self.player.Update(keys, dt, self.is_leftclicking, self.mouse_pos)
+    def update(self, dt, keys):  # dt is useless here only in the threaded function
+        self.client_data.keys = keys
+        self.client_data.left_clicking = self.left_clicking
+        self.client_data.mouse_pos = self.mouse_pos
 
     #draw
     def on_draw(self):
-        
         self.clear()
 
-        #first and foremost, we want to draw walls
-        for i in range(0, len(Wall.wallBatch), 1):
-            # update wall pos with camera
-            wall = Wall.walls[i]
-            #this if statement and the next check if the wall is on the screen.
-            if wall.init_x < self.player.pos.x + 750 and wall.init_x + wall.width > self.player.pos.x - 750:
-                if wall.init_y < self.player.pos.y + 450 and wall.init_y + wall.height > self.player.pos.y - 450:
-                    Wall.wallBatch[i].x, Wall.wallBatch[i].y = Wall.walls[i].pos.x + self.player.camera.x, Wall.walls[i].pos.y + self.player.camera.y
-                    Wall.wallBatch[i].draw()
+        our_player = self.server_data.player
 
         # our bullets
-        for bullet in self.player.gun.bullets:
-            if bullet.ID not in self.bullets_to_ignore:
-                BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
-                BULLETSPRITE.draw()
+        for bullet in our_player.gun.bullets:
+            BULLETSPRITE.position = (bullet.pos + our_player.camera).tuple()
+            BULLETSPRITE.draw()
+        # our player
+        self.PLAYERSPRITES[our_player.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+        self.PLAYERSPRITES[our_player.image_index].rotation = our_player.angle_looking
+        self.PLAYERSPRITES[our_player.image_index].draw()
 
-
-        # other players
-        for index, player in enumerate(self.other_players):
-            if len(self.loopp[index]) == 1:
-                self.update_the_packets(index, 0)
-
+        # other players stuff
+        for player in self.server_data.other_players:
+            # other players bullets
             for bullet in player.gun.bullets:
-                # "predict" the bullet pos but we already know where its going to be next frame
-                bullet.pos += (bullet.dir * bullet.speed) * self.dt * 60
-                if bullet.ID not in self.bullets_to_ignore:
-                    BULLETSPRITE.x, BULLETSPRITE.y = bullet.pos.x + self.player.camera.x, bullet.pos.y + self.player.camera.y
-                    BULLETSPRITE.draw()
-
-            player_pos = self.loopp[index][-1][0].x + self.player.camera.x, self.loopp[index][-1][0].y + self.player.camera.y
-
-            self.PLAYERSPRITES[player.image_index].x, self.PLAYERSPRITES[player.image_index].y = player_pos
-            
+                BULLETSPRITE.position = (bullet.pos + our_player.camera).tuple()
+                BULLETSPRITE.draw()
+            # other players sprites
+            self.PLAYERSPRITES[player.image_index].position = (player.pos + our_player.camera).tuple()
+            self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
             self.PLAYERSPRITES[player.image_index].draw()
-            self.loopp[index].pop()
-
-            GUNSPRITE.x, GUNSPRITE.y = player_pos
+            # other players gun
+            GUNSPRITE.position = (player.pos + our_player.camera).tuple()
             GUNSPRITE.rotation = player.angle_looking
             GUNSPRITE.draw()
-            # other players bullet
 
-        #draw our player last (our player takes precedence over everything)
-        self.PLAYERSPRITES[self.player.image_index].x, self.PLAYERSPRITES[self.player.image_index].y = 750, 450
-        self.PLAYERSPRITES[self.player.image_index].draw()
-
-        GUNSPRITE.x, GUNSPRITE.y = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        GUNSPRITE.rotation = self.player.angle_looking
+        # our gun
+        GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+        GUNSPRITE.rotation = our_player.angle_looking
         GUNSPRITE.draw()
-
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title

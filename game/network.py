@@ -9,12 +9,16 @@ class Network:
         self.s.connect(ADDRESS)
         print("Connected to server")
 
-    def SendID(self, ID):
+    def GetID(self, ID):  # ID should be "ID"
         self.s.send(pickle.dumps(ID))
         return pickle.loads(self.s.recv(100))
 
-    def SendMap(self, mapRequest):
-        self.s.send(pickle.dumps(mapRequest))
+    def GetMap(self, map_request):  # map_request should be "map_request"
+        self.s.send(pickle.dumps(map_request))
+        return pickle.loads(self.s.recv(10000))
+
+    def GetPlayers(self, player_request): # player_request should be "player_request"
+        self.s.send(pickle.dumps(player_request))
         return pickle.loads(self.s.recv(10000))
 
     def SendGet(self, clientData):

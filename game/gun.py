@@ -55,7 +55,6 @@ class Bullet:
         self.dir = dir.GetNormalized()
         self.distance_can_travel = 0
         self.speed = speed
-        self.ID = randrange(500)
 
     def Move(self, dt):
         movement = (self.dir * self.speed) * dt
