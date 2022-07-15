@@ -12,6 +12,8 @@ class ClientData:
         self.left_clicking = left_clicking
         self.mouse_pos = mouse_pos
         self.dt = dt
+        self.angle_looking = 0
+        self.last_two_angles = [0, 0]
         
 
 class ServerData:

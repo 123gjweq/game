@@ -15,6 +15,7 @@ class Player:
         self.max_health = 100
 
         self.angle_looking = 0
+        self.last_two_angles = [0, 0]
 
         self.camera = Vector2(750, 450)
         self.gun = Gun(self.pos)
@@ -37,11 +38,12 @@ class Player:
         self.pos += self.vel * dt
         self.camera -= self.vel * dt
 
-    def Update(self, keys, dt, is_leftclicking, mouse_pos):
-        self.Move(keys, dt * 60)
-        self.gun.Update(self.pos, mouse_pos, is_leftclicking, dt * 60)
-
-        self.angle_looking = math.degrees((mouse_pos - Vector2(SCREENWIDTH / 2, SCREENHEIGHT / 2)).angle) + 90
+    def Update(self, client_data):
+        self.dt = client_data.dt
+        self.Move(client_data.keys, self.dt * 60)
+        self.gun.Update(self.pos, client_data.mouse_pos, client_data.left_clicking, self.dt * 60)
+        self.angle_looking = client_data.angle_looking
+        self.last_two_angles = client_data.last_two_angles
 
     @property
     def image_index(self):

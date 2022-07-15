@@ -60,18 +60,12 @@ class ThreadedClient:
                 print(f"Closed connection with ID:{ID}") 
                 break
             
-            ThreadedClient.players[ID].Update(self.client_data.keys, self.client_data.dt, self.client_data.left_clicking, self.client_data.mouse_pos)
-
-            our_player = ThreadedClient.players[ID]
-
-            # check if bullets hits the player
-            other_players = ThreadedClient.players[0:]
-            other_players.remove(ThreadedClient.players[ID])
-
+            ThreadedClient.players[ID].Update(self.client_data)
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)
 
             self.server_data.player = ThreadedClient.players[ID]
             self.server_data.other_players = other_players
+
             conn.send(pickle.dumps(self.server_data))

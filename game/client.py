@@ -25,6 +25,7 @@ class Game(pyglet.window.Window):
         self.left_clicking = False
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
 
+        self.REFERENCEPOINT = REFERENCEPOINT
         # connection
         self.n = Network()
         # get ID
@@ -59,6 +60,7 @@ class Game(pyglet.window.Window):
 
             self.server_data = self.n.SendGet(self.client_data)
             self.just_recieved_server_data = True
+            time.sleep(.05)
 
     #---EVENTS---
     def on_mouse_motion(self, x, y, dx, dy):
@@ -85,12 +87,26 @@ class Game(pyglet.window.Window):
 
     #update helper function helps predict stuf so it doesnt look like running at 10 fps
     def player_prediction(self, dt):
+        #update the rotation client-side (it make is look less girry)
+        self.client_data.angle_looking = \
+        math.degrees((self.mouse_pos - Vector2(SCREENWIDTH / 2, SCREENHEIGHT / 2)).angle) + 90
+        #update last two angles that are looked
+        self.client_data.last_two_angles.append(self.client_data.angle_looking)
+        self.client_data.last_two_angles.pop(0)
+
         if self.just_recieved_server_data is False:
             for player in self.server_data.other_players:
-                player.pos = player.pos + player.vel * dt * 60
+                player.pos += player.vel * dt * 60
+                #smooth angle predictions
+                player.angle_looking += (player.last_two_angles[1] - player.last_two_angles[0]) * .8
             player = self.server_data.player
             player.pos += player.vel * (dt * 60)
             player.camera -= player.vel * (dt * 60)
+        else:
+            #This will make sure the players are in sync
+            player = self.server_data.player
+            player.pos -= player.vel * (player.dt * 30)
+            player.camera += player.vel * (player.dt * 30)
 
     #---UPDATE---
     #update
@@ -115,7 +131,7 @@ class Game(pyglet.window.Window):
             BULLETSPRITE.draw()
         # our player
         self.PLAYERSPRITES[our_player.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        self.PLAYERSPRITES[our_player.image_index].rotation = our_player.angle_looking
+        self.PLAYERSPRITES[our_player.image_index].rotation = self.client_data.angle_looking
         self.PLAYERSPRITES[our_player.image_index].draw()
 
         # other players stuff
@@ -135,8 +151,9 @@ class Game(pyglet.window.Window):
 
         # our gun
         GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        GUNSPRITE.rotation = our_player.angle_looking
+        GUNSPRITE.rotation = self.client_data.angle_looking
         GUNSPRITE.draw()
+        self.REFERENCEPOINT.blit(self.server_data.player.camera.x, self.server_data.player.camera.y)
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title

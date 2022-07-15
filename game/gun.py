@@ -12,7 +12,7 @@ class Gun:
         
         self.damage = 10
         self.bullet_speed = 20
-        self.time_between_bullets = 0.3 # in seconds
+        self.time_between_bullets = 0.01 # in seconds
         self.reload_time = 1 # in seconds
         self.automatic = True
         self.distance_bullet_can_travel = 800
@@ -34,12 +34,6 @@ class Gun:
             self.semi_automatic_check_if_shoot = False
         elif is_leftclicking is False:
             self.semi_automatic_check_if_shoot = True
-        
-        # move all guns bullets
-        for bullet in self.bullets:
-            bullet.Move(dt)
-            if bullet.distance_can_travel > self.distance_bullet_can_travel:
-                self.bullets.remove(bullet)
 
     def Shoot(self, mouse_pos):
         if (time.time() - self.time_last_shot) > self.time_between_bullets:
@@ -50,13 +44,20 @@ class Gun:
 
 
 class Bullet:
+
     def __init__(self, pos, dir, speed):
         self.pos = pos
         self.dir = dir.GetNormalized()
         self.distance_can_travel = 0
         self.speed = speed
+        self.time_shot = time.time()
+        self.ID = randrange(5000)
+
 
     def Move(self, dt):
         movement = (self.dir * self.speed) * dt
         self.pos += movement
         self.distance_can_travel += movement.length
+
+    def GetPosByTime(self, time_since_shot):
+        pass
