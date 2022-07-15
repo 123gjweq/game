@@ -34,12 +34,12 @@ class Game(pyglet.window.Window):
         # get players
         self.client_data = ClientData()
         self.server_data = self.n.GetPlayers("wall_request")
-        
-
-        self.buffer = []
 
         self.network_thread = Thread(target=self.ThreadedNetwork, args=())
         self.network_thread.start()
+
+        #stuff
+        self.just_recieved_server_data = False
 
         # initialize map and walls
         # for wall in self.map:
@@ -58,6 +58,7 @@ class Game(pyglet.window.Window):
             self.client_data.dt = dt
 
             self.server_data = self.n.SendGet(self.client_data)
+            self.just_recieved_server_data = True
             time.sleep(0.01)
 
     #---EVENTS---
@@ -89,12 +90,11 @@ class Game(pyglet.window.Window):
         self.client_data.keys = keys
         self.client_data.left_clicking = self.left_clicking
         self.client_data.mouse_pos = self.mouse_pos
-
-        # add input to buffer
-        self.buffer.append([self.client_data, time.time()])
-        # check if buffer has been there too long
-        if time.time() - self.buffer[0][1] > 0.3:
-            self.buffer.pop(0)
+        
+        if self.just_recieved_server_data is False:
+            for player in self.server_data.other_players:
+                player.pos = player.pos + player.vel * dt
+        self.just_recieved_server_data = False
 
     #draw
     def on_draw(self):
@@ -139,4 +139,5 @@ def main():
     pyglet.clock.schedule_interval(screen.update, screen.frame_rate, keys)
     pyglet.app.run()
     return 0
+
 main()
