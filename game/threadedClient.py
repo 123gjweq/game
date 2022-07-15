@@ -68,12 +68,6 @@ class ThreadedClient:
             other_players = ThreadedClient.players[0:]
             other_players.remove(ThreadedClient.players[ID])
 
-            for player in other_players:
-                for bullet in player.gun.bullets:
-                    if Collision.PointOnCircle(bullet.pos, our_player.pos, 25):
-                        our_player.health -= 10
-                        player.gun.bullets.remove(bullet)
-
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)

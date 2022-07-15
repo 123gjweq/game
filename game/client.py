@@ -38,7 +38,7 @@ class Game(pyglet.window.Window):
         self.network_thread = Thread(target=self.ThreadedNetwork, args=())
         self.network_thread.start()
 
-        #stuff
+        #player prediction
         self.just_recieved_server_data = False
 
         # initialize map and walls
@@ -59,7 +59,6 @@ class Game(pyglet.window.Window):
 
             self.server_data = self.n.SendGet(self.client_data)
             self.just_recieved_server_data = True
-            time.sleep(0.01)
 
     #---EVENTS---
     def on_mouse_motion(self, x, y, dx, dy):
@@ -84,6 +83,15 @@ class Game(pyglet.window.Window):
         self.n.Close()
         self.close()
 
+    #update helper function helps predict stuf so it doesnt look like running at 10 fps
+    def player_prediction(self, dt):
+        if self.just_recieved_server_data is False:
+            for player in self.server_data.other_players:
+                player.pos = player.pos + player.vel * dt * 60
+            player = self.server_data.player
+            player.pos += player.vel * (dt * 60)
+            player.camera -= player.vel * (dt * 60)
+
     #---UPDATE---
     #update
     def update(self, dt, keys):  # dt is useless here only in the threaded function
@@ -91,9 +99,8 @@ class Game(pyglet.window.Window):
         self.client_data.left_clicking = self.left_clicking
         self.client_data.mouse_pos = self.mouse_pos
         
-        if self.just_recieved_server_data is False:
-            for player in self.server_data.other_players:
-                player.pos = player.pos + player.vel * dt
+        self.player_prediction(dt)
+
         self.just_recieved_server_data = False
 
     #draw
