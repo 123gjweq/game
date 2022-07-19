@@ -1,12 +1,17 @@
 from pyglet.window import key
 import math
-from reusableClasses.vector2 import Vector2
-from reusableClasses.collisions import Collision
-from constants import *
+
 from gun import Gun
 from wall import Wall
+from constants import *
+
+from reusableClasses.vector2 import Vector2
+from reusableClasses.collisions import Collision
 
 class Player:
+
+    walls = []
+
     def __init__(self, pos):
         self.pos = pos
         self.vel = Vector2()
@@ -34,9 +39,18 @@ class Player:
 
         if self.vel.x != 0 and self.vel.y != 0:
             self.vel = self.vel * .707 #.707 is approximately the reciprocal of sqrt 2.
-
+        
+        # move and update camera
         self.pos += self.vel * dt
         self.camera -= self.vel * dt
+
+        #check if there are any collisions with the walls
+        for wall in Wall.walls:
+            colliding, pos = Collision.CircleOnRect(self.pos, 25, wall.pos, wall.width, wall.height)
+            if colliding:
+                self.pos = pos
+                self.camera.x, self.camera.y = -self.pos.x + 750, -self.pos.y + 450
+
 
     def Update(self, client_data):
         self.dt = client_data.dt

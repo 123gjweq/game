@@ -23,6 +23,7 @@ class Game(pyglet.window.Window):
         self.frame_rate = 1/120.0
         self.mouse_pos = Vector2()
         self.left_clicking = False
+
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
 
         self.REFERENCEPOINT = REFERENCEPOINT
@@ -43,8 +44,8 @@ class Game(pyglet.window.Window):
         self.just_recieved_server_data = False
 
         # initialize map and walls
-        # for wall in self.map:
-            # Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
+        for wall in self.map:
+            Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
 
     # ---NETWORKING STUFF---
     def ThreadedNetwork(self):
@@ -60,7 +61,6 @@ class Game(pyglet.window.Window):
 
             self.server_data = self.n.SendGet(self.client_data)
             self.just_recieved_server_data = True
-            time.sleep(.05)
 
     #---EVENTS---
     def on_mouse_motion(self, x, y, dx, dy):
@@ -110,7 +110,7 @@ class Game(pyglet.window.Window):
 
     #---UPDATE---
     #update
-    def update(self, dt, keys):  # dt is useless here only in the threaded function
+    def update(self, dt, keys):
         self.client_data.keys = keys
         self.client_data.left_clicking = self.left_clicking
         self.client_data.mouse_pos = self.mouse_pos
@@ -133,6 +133,12 @@ class Game(pyglet.window.Window):
         self.PLAYERSPRITES[our_player.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
         self.PLAYERSPRITES[our_player.image_index].rotation = self.client_data.angle_looking
         self.PLAYERSPRITES[our_player.image_index].draw()
+
+        # walls
+        for i in range(0, len(Wall.wallBatch), 1):
+            # update wall position with camera then draw
+            Wall.wallBatch[i].position = (Wall.walls[i].pos + our_player.camera).tuple()
+            Wall.wallBatch[i].draw()
 
         # other players stuff
         for player in self.server_data.other_players:

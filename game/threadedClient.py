@@ -25,12 +25,6 @@ class ThreadedClient:
         self.threaded_game = Thread(target=self.ThreadedGame, args=(conn, ID))
         self.threaded_game.start()
 
-        #self.threaded_client_data = Thread(target=self.ThreadedClientData, args=(conn, ID))
-        #self.threaded_client_data.start()
-
-    def ThreadedClientData(self, conn, ID):
-        pass
-
     def ThreadedGame(self, conn, ID):
         # make player
         # spawn at anyhwere else other than (0, 0) and you will get bug fix camera for later
@@ -51,6 +45,8 @@ class ThreadedClient:
         wall_request = pickle.loads(conn.recv(100))
         if wall_request == "wall_request":
             conn.send(pickle.dumps(server_data))
+        
+        Player.walls = self.walls
 
         while True:
             self.client_data = pickle.loads(conn.recv(10000))
@@ -60,12 +56,24 @@ class ThreadedClient:
                 print(f"Closed connection with ID:{ID}") 
                 break
             
-            ThreadedClient.players[ID].Update(self.client_data)
+            our_player = ThreadedClient.players[ID]
+            our_player.Update(self.client_data)
+
+            # our_player.bullets are updated
+            for bullet in our_player.gun.bullets:
+                # bullet moves
+                bullet.Move(self.client_data.dt * 60)
+                # check if bullet hit any other player
+                for player in ThreadedClient.players:
+                    if player != our_player:
+                        if Collision.PointOnCircle(bullet.pos, player.pos, 25):
+                            player.health -= 10
+                            our_player.gun.bullets.remove(bullet)
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)
 
-            self.server_data.player = ThreadedClient.players[ID]
+            self.server_data.player = our_player
             self.server_data.other_players = other_players
 
             conn.send(pickle.dumps(self.server_data))

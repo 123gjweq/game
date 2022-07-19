@@ -12,7 +12,7 @@ class Gun:
         
         self.damage = 10
         self.bullet_speed = 20
-        self.time_between_bullets = 0.01 # in seconds
+        self.time_between_bullets = 0.3 # in seconds
         self.reload_time = 1 # in seconds
         self.automatic = True
         self.distance_bullet_can_travel = 800
@@ -58,6 +58,3 @@ class Bullet:
         movement = (self.dir * self.speed) * dt
         self.pos += movement
         self.distance_can_travel += movement.length
-
-    def GetPosByTime(self, time_since_shot):
-        pass
