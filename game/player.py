@@ -25,6 +25,8 @@ class Player:
         self.camera = Vector2(750, 450)
         self.gun = Gun(self.pos)
 
+        self.kills = 0
+
     def Move(self, keys, dt):
         self.vel.Clear()
 

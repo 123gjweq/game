@@ -1,9 +1,11 @@
 import time
-from random import randrange
 
 from constants import *
+from reusableClasses.collisions import Collision
 
 class Gun:
+
+    walls = []
 
     def __init__(self, pos):
         self.bullets = []
@@ -38,23 +40,39 @@ class Gun:
     def Shoot(self, mouse_pos):
         if (time.time() - self.time_last_shot) > self.time_between_bullets:
             # pos is relative to screen
-            direction_of_bullet = (mouse_pos - Vector2(SCREENWIDTH / 2, SCREENHEIGHT / 2))
-            self.bullets.append(Bullet(self.pos, direction_of_bullet, self.bullet_speed))
+            direction_of_bullet = (mouse_pos - Vector2(SCREENWIDTH / 2, SCREENHEIGHT / 2)).GetNormalized()
+            # check if bullet hits wall
+            contact_point = Vector2()
+            lowestLengthOfWall = Bullet.distance_can_travel
+            for wall in Gun.walls:
+                if Collision.RectOnRay(self.pos, direction_of_bullet, wall.pos, wall.width, wall.height, contact_point):
+                    lengthOfWall = (contact_point - self.pos).length
+                    if lengthOfWall < lowestLengthOfWall:
+                        lowestLengthOfWall = lengthOfWall
+
+            self.bullets.append(Bullet(self.pos, direction_of_bullet, self.bullet_speed, lowestLengthOfWall))
             self.time_last_shot = time.time()
 
 
 class Bullet:
 
-    def __init__(self, pos, dir, speed):
+    distance_can_travel = 700
+
+    def __init__(self, pos, dir, speed, distance_to_travel):
         self.pos = pos
         self.dir = dir.GetNormalized()
-        self.distance_can_travel = 0
+        self.distance_to_travel = distance_to_travel
+        self.distance_traveled = 0
         self.speed = speed
         self.time_shot = time.time()
-        self.ID = randrange(5000)
 
+    @property
+    def should_die(self):
+        if self.distance_traveled > self.distance_to_travel:
+            return True
+        return False
 
     def Move(self, dt):
         movement = (self.dir * self.speed) * dt
         self.pos += movement
-        self.distance_can_travel += movement.length
+        self.distance_traveled += movement.length

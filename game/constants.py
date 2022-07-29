@@ -2,9 +2,11 @@ import pyglet
 import socket
 import math
 from reusableClasses.vector2 import Vector2
+
 def CenterImage(image):
     image.anchor_x = math.floor(image.width / 2)
     image.anchor_y = math.floor(image.height / 2)
+    
 SCREENWIDTH = 1500
 SCREENHEIGHT = 900
 

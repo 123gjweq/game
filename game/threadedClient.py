@@ -4,6 +4,7 @@ from threading import Thread
 
 from loadmap import LoadMap
 from player import Player
+from gun import Gun
 from threading import Thread
 
 from sentStuff import *
@@ -16,6 +17,7 @@ class ThreadedClient:
 
     def __init__(self, conn, ID):
         self.walls = LoadMap("maps/testMap.txt")
+        Gun.walls.append(self.walls)
 
         self.client_data = ClientData()
         self.server_data = ServerData()
@@ -47,6 +49,7 @@ class ThreadedClient:
             conn.send(pickle.dumps(server_data))
         
         Player.walls = self.walls
+        Gun.walls = self.walls
 
         while True:
             self.client_data = pickle.loads(conn.recv(10000))
@@ -59,16 +62,24 @@ class ThreadedClient:
             our_player = ThreadedClient.players[ID]
             our_player.Update(self.client_data)
 
-            # our_player.bullets are updated
+            # update our_player bullets
             for bullet in our_player.gun.bullets:
                 # bullet moves
                 bullet.Move(self.client_data.dt * 60)
+
+                # check if bullet should die
+                if bullet.should_die:
+                    our_player.gun.bullets.remove(bullet)
+                    continue
+
                 # check if bullet hit any other player
                 for player in ThreadedClient.players:
                     if player != our_player:
                         if Collision.PointOnCircle(bullet.pos, player.pos, 25):
                             player.health -= 10
                             our_player.gun.bullets.remove(bullet)
+                            our_player.kills += 1
+                            break
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)

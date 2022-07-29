@@ -112,6 +112,41 @@ class Collision:
             return True
         return False
 
+    def RectOnRay(ray_origin, ray_direction, rPos, rWidth, rHeight, contact_point):
+        t_near = Vector2()
+
+        if ray_direction.x == 0:
+            ray_direction.x += 0.1
+        if ray_direction.y == 0:
+            ray_direction.y += 0.1
+            
+        t_near.x = (rPos.x - ray_origin.x) / ray_direction.x
+        t_near.y = (rPos.y - ray_origin.y) / ray_direction.y
+
+        t_far = Vector2()
+        t_far.x = (rPos.x + rWidth - ray_origin.x) / ray_direction.x
+        t_far.y = (rPos.y + rHeight - ray_origin.y) / ray_direction.y
+
+        if t_near.x > t_far.x:
+            t_near.x, t_far.x = Swap(t_near.x, t_far.x)
+        if t_near.y > t_far.y:
+            t_near.y, t_far.y = Swap(t_near.y, t_far.y)
+
+        if t_near.x > t_far.y or t_near.y > t_far.x:
+            return False
+
+        t_hit_near = max(t_near.x, t_near.y)
+        t_hit_far = min(t_far.x, t_far.y)
+
+        # if there is a collision opposite of the direction
+        if t_hit_far < 0:
+            return False
+
+        contact_point.x = ray_origin.x + t_hit_near * ray_direction.x
+        contact_point.y = ray_origin.y + t_hit_near * ray_direction.y
+
+        return True
+
     @staticmethod
     def RectOnPoly(rectPos, rWidth, rHeight, vertices):
         n = 0
