@@ -3,6 +3,7 @@ import math
 
 from gun import Gun
 from wall import Wall
+from camera import Camera
 from constants import *
 
 from reusableClasses.vector2 import Vector2
@@ -22,7 +23,7 @@ class Player:
         self.angle_looking = 0
         self.last_two_angles = [0, 0]
 
-        self.camera = Vector2(750, 450)
+        self.camera = Camera(Vector2(0, 0))
         self.gun = Gun(self.pos)
 
         self.kills = 0
@@ -44,14 +45,14 @@ class Player:
         
         # move and update camera
         self.pos += self.vel * dt
-        self.camera -= self.vel * dt
 
         #check if there are any collisions with the walls
         for wall in Wall.walls:
             colliding, pos = Collision.CircleOnRect(self.pos, 25, wall.pos, wall.width, wall.height)
             if colliding:
                 self.pos = pos
-                self.camera.x, self.camera.y = -self.pos.x + 750, -self.pos.y + 450
+        
+        self.camera.pos = self.pos - Vector2(SCREENWIDTH/2, SCREENHEIGHT/2)
 
 
     def Update(self, client_data):

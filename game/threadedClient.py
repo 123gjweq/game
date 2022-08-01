@@ -29,8 +29,7 @@ class ThreadedClient:
 
     def ThreadedGame(self, conn, ID):
         # make player
-        # spawn at anyhwere else other than (0, 0) and you will get bug fix camera for later
-        ThreadedClient.players.append(Player(Vector2(0, 0)))
+        ThreadedClient.players.append(Player(Vector2(1000, 2000))) # this vector is where you spawn
         other_players = ThreadedClient.players[0:]
         other_players.pop(ID)
         server_data = ServerData(ThreadedClient.players[ID], other_players)

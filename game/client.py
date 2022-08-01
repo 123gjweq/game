@@ -25,8 +25,6 @@ class Game(pyglet.window.Window):
         self.left_clicking = False
 
         self.PLAYERSPRITES = [INJURED4SPRITE, INJURED3SPRITE, INJURED2SPRITE, INJURED1SPRITE, INJURED0SPRITE]
-
-        self.REFERENCEPOINT = REFERENCEPOINT
         # connection
         self.n = Network()
         # get ID
@@ -101,12 +99,12 @@ class Game(pyglet.window.Window):
                 player.angle_looking += (player.last_two_angles[1] - player.last_two_angles[0]) * .8
             player = self.server_data.player
             player.pos += player.vel * (dt * 60)
-            player.camera -= player.vel * (dt * 60)
+            player.camera.pos -= player.vel * (dt * 60)
         else:
             #This will make sure the players are in sync
             player = self.server_data.player
             player.pos -= player.vel * (player.dt * 30)
-            player.camera += player.vel * (player.dt * 30)
+            player.camera.pos += player.vel * (player.dt * 30)
 
     #---UPDATE---
     #update
@@ -125,9 +123,12 @@ class Game(pyglet.window.Window):
 
         our_player = self.server_data.player
 
+        if self.left_clicking:
+            print(self.mouse_pos + our_player.camera.offset)
+
         # our bullets
         for bullet in our_player.gun.bullets:
-            BULLETSPRITE.position = (bullet.pos + our_player.camera).tuple()
+            BULLETSPRITE.position = (bullet.pos + our_player.camera.offset).tuple()
             BULLETSPRITE.draw()
         # our player
         self.PLAYERSPRITES[our_player.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
@@ -137,21 +138,21 @@ class Game(pyglet.window.Window):
         # walls
         for i in range(0, len(Wall.wallBatch), 1):
             # update wall position with camera then draw
-            Wall.wallBatch[i].position = (Wall.walls[i].pos + our_player.camera).tuple()
+            Wall.wallBatch[i].position = (Wall.walls[i].pos + our_player.camera.offset).tuple()
             Wall.wallBatch[i].draw()
 
         # other players stuff
         for player in self.server_data.other_players:
             # other players bullets
             for bullet in player.gun.bullets:
-                BULLETSPRITE.position = (bullet.pos + our_player.camera).tuple()
+                BULLETSPRITE.position = (bullet.pos + our_player.camera.offset).tuple()
                 BULLETSPRITE.draw()
             # other players sprites
-            self.PLAYERSPRITES[player.image_index].position = (player.pos + our_player.camera).tuple()
+            self.PLAYERSPRITES[player.image_index].position = (player.pos + our_player.camera.offset).tuple()
             self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
             self.PLAYERSPRITES[player.image_index].draw()
             # other players gun
-            GUNSPRITE.position = (player.pos + our_player.camera).tuple()
+            GUNSPRITE.position = (player.pos + our_player.camera.offset).tuple()
             GUNSPRITE.rotation = player.angle_looking
             GUNSPRITE.draw()
 
@@ -159,7 +160,6 @@ class Game(pyglet.window.Window):
         GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
         GUNSPRITE.rotation = self.client_data.angle_looking
         GUNSPRITE.draw()
-        self.REFERENCEPOINT.blit(self.server_data.player.camera.x, self.server_data.player.camera.y)
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title
