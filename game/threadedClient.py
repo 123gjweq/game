@@ -56,6 +56,7 @@ class ThreadedClient:
             if self.client_data == "Quit":
                 conn.close()
                 print(f"Closed connection with ID:{ID}") 
+                ThreadedClient.players.remove(ThreadedClient.players[ID])
                 break
             
             our_player = ThreadedClient.players[ID]
@@ -64,6 +65,7 @@ class ThreadedClient:
             if our_player.health <= 0:
                 conn.send(pickle.dumps("You Died"))
                 our_player.pos = Vector2(-1000, -1000)
+                ThreadedClient.players.remove(ThreadedClient.players[ID])
                 print(f"Player Died with ID:{ID}")
                 break
 
@@ -91,8 +93,6 @@ class ThreadedClient:
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)
-
-            self.server_data.player = our_player
             self.server_data.other_players = other_players
 
             conn.send(pickle.dumps(self.server_data))
