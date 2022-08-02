@@ -61,6 +61,12 @@ class ThreadedClient:
             our_player = ThreadedClient.players[ID]
             our_player.Update(self.client_data)
 
+            if our_player.health <= 0:
+                conn.send(pickle.dumps("You Died"))
+                our_player.pos = Vector2(-1000, -1000)
+                print(f"Player Died with ID:{ID}")
+                break
+
             # update our_player bullets
             for bullet in our_player.gun.bullets:
                 # bullet moves
@@ -75,9 +81,12 @@ class ThreadedClient:
                 for player in ThreadedClient.players:
                     if player != our_player:
                         if Collision.PointOnCircle(bullet.pos, player.pos, 25):
-                            player.health -= 10
+                            player.health -= our_player.gun.damage
+                            if player.health <= 0:
+                                our_player.kills += 1
+                                if not our_player.kills > 9:
+                                    our_player.gun.ChangeStats(Gun.upgrades[our_player.kills])
                             our_player.gun.bullets.remove(bullet)
-                            our_player.kills += 1
                             break
 
             other_players = ThreadedClient.players[0:]

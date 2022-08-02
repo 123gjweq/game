@@ -35,6 +35,8 @@ class Game(pyglet.window.Window):
         self.client_data = ClientData()
         self.server_data = self.n.GetPlayers("wall_request")
 
+        self.died = False
+
         self.network_thread = Thread(target=self.ThreadedNetwork, args=())
         self.network_thread.start()
 
@@ -57,7 +59,12 @@ class Game(pyglet.window.Window):
 
             self.client_data.dt = dt
 
-            self.server_data = self.n.SendGet(self.client_data)
+            data = self.n.SendGet(self.client_data)
+            if data == "You Died":
+                self.died = True
+                break
+            else:
+                self.server_data = data
             self.just_recieved_server_data = True
 
     #---EVENTS---
@@ -117,14 +124,15 @@ class Game(pyglet.window.Window):
 
         self.just_recieved_server_data = False
 
+        if self.died:
+            self.n.Close()
+            self.close()
+
     #draw
     def on_draw(self):
         self.clear()
 
         our_player = self.server_data.player
-
-        if self.left_clicking:
-            print(self.mouse_pos + our_player.camera.offset)
 
         # our bullets
         for bullet in our_player.gun.bullets:

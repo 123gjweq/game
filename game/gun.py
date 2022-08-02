@@ -6,22 +6,43 @@ from reusableClasses.collisions import Collision
 class Gun:
 
     walls = []
+    upgrades = \
+    [ # in the form: damage, bullet_speed, time_between_bullets, reload_time, automatic
+        [10, 20, 0.3, 1, False],
+        [10, 20, 0.2, 1, True],
+        [15, 20, 0.2, 1, True],
+        [20, 20, 0.2, 1, True],
+        [20, 30, 0.15, 1, True],
+        [20, 30, 0.125, 0.5, True],
+        [20, 35, 0.125, 0.5, True],
+        [100, 10, 2, 1, False],
+        [25, 30, 0.125, 1, True],
+        [25, 30, 0.125, 0.5, True]
+    ]
 
     def __init__(self, pos):
         self.bullets = []
 
         self.pos = pos
         
-        self.damage = 10
-        self.bullet_speed = 20
-        self.time_between_bullets = 0.3 # in seconds
-        self.reload_time = 1 # in seconds
-        self.automatic = True
-        self.distance_bullet_can_travel = 800
+        # upgrades
+        self.damage = Gun.upgrades[0][0]
+        self.bullet_speed = Gun.upgrades[0][1]
+        self.time_between_bullets = Gun.upgrades[0][2]
+        self.reload_time = Gun.upgrades[0][3]
+        self.automatic = Gun.upgrades[0][4]
 
+        self.distance_bullet_can_travel = 800
         self.time_last_shot = 0
 
         self.semi_automatic_check_if_shoot = True
+
+    def ChangeStats(self, stats):
+        self.damage = stats[0]
+        self.bullet_speed = stats[1]
+        self.time_between_bullets = stats[2]
+        self.reload_time = stats[3]
+        self.automatic = stats[4]
 
     def Update(self, pos, mouse_pos, is_leftclicking, dt):
         self.pos = pos
