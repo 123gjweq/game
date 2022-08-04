@@ -47,6 +47,15 @@ class Game(pyglet.window.Window):
         for wall in self.map:
             Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
 
+    def RemoveNone(self, players):
+        new_players = []
+
+        for player in players:
+            if player != None:
+                new_players.append(player)
+        
+        return new_players
+
     # ---NETWORKING STUFF---
     def ThreadedNetwork(self):
         
@@ -65,6 +74,8 @@ class Game(pyglet.window.Window):
                 break
             else:
                 self.server_data = data
+                self.server_data.other_players = self.RemoveNone(data.other_players)
+
             self.just_recieved_server_data = True
 
     #---EVENTS---
@@ -87,6 +98,7 @@ class Game(pyglet.window.Window):
     
     def on_close(self):
         self.n.SendClose()
+        time.sleep(.5)
         self.n.Close()
         self.close()
 
@@ -130,6 +142,7 @@ class Game(pyglet.window.Window):
 
     #draw
     def on_draw(self):
+        print(self.server_data.other_players)
         self.clear()
 
         our_player = self.server_data.player

@@ -56,7 +56,7 @@ class ThreadedClient:
             if self.client_data == "Quit":
                 conn.close()
                 print(f"Closed connection with ID:{ID}") 
-                ThreadedClient.players.remove(ThreadedClient.players[ID])
+                ThreadedClient.players[ID] = None
                 break
             
             our_player = ThreadedClient.players[ID]
@@ -65,7 +65,7 @@ class ThreadedClient:
             if our_player.health <= 0:
                 conn.send(pickle.dumps("You Died"))
                 our_player.pos = Vector2(-1000, -1000)
-                ThreadedClient.players.remove(ThreadedClient.players[ID])
+                ThreadedClient.players[ID] = None
                 print(f"Player Died with ID:{ID}")
                 break
 
@@ -81,7 +81,7 @@ class ThreadedClient:
 
                 # check if bullet hit any other player
                 for player in ThreadedClient.players:
-                    if player != our_player:
+                    if player != our_player and player != None:
                         if Collision.PointOnCircle(bullet.pos, player.pos, 25):
                             player.health -= our_player.gun.damage
                             if player.health <= 0:
@@ -93,6 +93,9 @@ class ThreadedClient:
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)
+
+            self.server_data.player = our_player
             self.server_data.other_players = other_players
 
             conn.send(pickle.dumps(self.server_data))
+            #print(ThreadedClient.players)
