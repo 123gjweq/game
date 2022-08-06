@@ -1,5 +1,6 @@
 import pickle
 import time
+import random
 from threading import Thread
 
 from loadmap import LoadMap
@@ -16,11 +17,25 @@ class ThreadedClient:
     players = []
 
     def __init__(self, conn, ID):
-        self.walls = LoadMap("maps/testMap.txt")
+        self.walls = LoadMap("maps/map.txt")
         Gun.walls.append(self.walls)
 
         self.client_data = ClientData()
         self.server_data = ServerData()
+
+        self.dead = False
+
+        self.spawningPoints =   [Vector2(x[0], x[1]) for x in [ (2739, 263),
+                                                                (3360, 2070),
+                                                                (1449, 1017),
+                                                                (129, 419),
+                                                                (1716, 2090),
+                                                                (2963, 1469),
+                                                                (1442, 2582),
+                                                                (2315, 2335),
+                                                                (1496, 307),
+                                                                (3001, 181),
+                                                                (2310, 895),]]
 
 
         # create everything before the threads start!
@@ -29,7 +44,7 @@ class ThreadedClient:
 
     def ThreadedGame(self, conn, ID):
         # make player
-        ThreadedClient.players.append(Player(Vector2(1000, 2000))) # this vector is where you spawn
+        ThreadedClient.players.append(Player(random.choice(self.spawningPoints))) # this vector is where you spawn
         other_players = ThreadedClient.players[0:]
         other_players.pop(ID)
         server_data = ServerData(ThreadedClient.players[ID], other_players)
@@ -60,14 +75,15 @@ class ThreadedClient:
                 break
             
             our_player = ThreadedClient.players[ID]
-            our_player.Update(self.client_data)
+            if not self.dead:
+                our_player.Update(self.client_data)
 
             if our_player.health <= 0:
+                self.dead = True
                 conn.send(pickle.dumps("You Died"))
-                our_player.pos = Vector2(-1000, -1000)
-                ThreadedClient.players[ID] = None
+                our_player.pos = Vector2(-10000, -1000)
+                #ThreadedClient.players[ID] = None
                 print(f"Player Died with ID:{ID}")
-                break
 
             # update our_player bullets
             for bullet in our_player.gun.bullets:

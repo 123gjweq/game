@@ -69,9 +69,9 @@ class Game(pyglet.window.Window):
             self.client_data.dt = dt
 
             data = self.n.SendGet(self.client_data)
+
             if data == "You Died":
                 self.died = True
-                break
             else:
                 self.server_data = data
                 self.server_data.other_players = self.RemoveNone(data.other_players)
@@ -137,50 +137,59 @@ class Game(pyglet.window.Window):
         self.just_recieved_server_data = False
 
         if self.died:
-            self.n.Close()
-            self.close()
+            #self.n.Close()
+            #self.close()
+            pass
 
     #draw
     def on_draw(self):
-        print(self.server_data.other_players)
         self.clear()
 
-        our_player = self.server_data.player
+        if not self.died or self.server_data.other_players == []:
+            player_spectating = self.server_data.player
+        else:
+            player_spectating = self.server_data.other_players[0]
+            
 
         # our bullets
-        for bullet in our_player.gun.bullets:
-            BULLETSPRITE.position = (bullet.pos + our_player.camera.offset).tuple()
+        for bullet in player_spectating.gun.bullets:
+            BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
             BULLETSPRITE.draw()
         # our player
-        self.PLAYERSPRITES[our_player.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        self.PLAYERSPRITES[our_player.image_index].rotation = self.client_data.angle_looking
-        self.PLAYERSPRITES[our_player.image_index].draw()
+        if not self.died:
+            self.PLAYERSPRITES[player_spectating.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+            self.PLAYERSPRITES[player_spectating.image_index].rotation = self.client_data.angle_looking
+            self.PLAYERSPRITES[player_spectating.image_index].draw()
 
         # walls
         for i in range(0, len(Wall.wallBatch), 1):
             # update wall position with camera then draw
-            Wall.wallBatch[i].position = (Wall.walls[i].pos + our_player.camera.offset).tuple()
+            Wall.wallBatch[i].position = (Wall.walls[i].pos + player_spectating.camera.offset).tuple()
             Wall.wallBatch[i].draw()
 
         # other players stuff
         for player in self.server_data.other_players:
             # other players bullets
             for bullet in player.gun.bullets:
-                BULLETSPRITE.position = (bullet.pos + our_player.camera.offset).tuple()
+                BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
                 BULLETSPRITE.draw()
             # other players sprites
-            self.PLAYERSPRITES[player.image_index].position = (player.pos + our_player.camera.offset).tuple()
+            self.PLAYERSPRITES[player.image_index].position = (player.pos + player_spectating.camera.offset).tuple()
             self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
             self.PLAYERSPRITES[player.image_index].draw()
             # other players gun
-            GUNSPRITE.position = (player.pos + our_player.camera.offset).tuple()
+            GUNSPRITE.position = (player.pos + player_spectating.camera.offset).tuple()
             GUNSPRITE.rotation = player.angle_looking
             GUNSPRITE.draw()
 
         # our gun
-        GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-        GUNSPRITE.rotation = self.client_data.angle_looking
-        GUNSPRITE.draw()
+        if not self.died:
+            GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+            GUNSPRITE.rotation = self.client_data.angle_looking
+            GUNSPRITE.draw()
+
+        if self.died:
+            LIMAGESPRITE.draw()
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title
