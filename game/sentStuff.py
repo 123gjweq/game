@@ -14,6 +14,7 @@ class ClientData:
         self.dt = dt
         self.angle_looking = 0
         self.last_two_angles = [0, 0]
+        self.respawn = False
         
 
 class ServerData:

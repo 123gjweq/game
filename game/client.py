@@ -47,6 +47,8 @@ class Game(pyglet.window.Window):
         for wall in self.map:
             Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
 
+
+
     def RemoveNone(self, players):
         new_players = []
 
@@ -72,6 +74,7 @@ class Game(pyglet.window.Window):
 
             if data == "You Died":
                 self.died = True
+                self.client_data.respawn = False
             else:
                 self.server_data = data
                 self.server_data.other_players = self.RemoveNone(data.other_players)
@@ -91,10 +94,14 @@ class Game(pyglet.window.Window):
         if button == 1:
             self.left_clicking = True
 
-
     def on_mouse_release(self, x, y, button, modifiers):
         if button == 1:
             self.left_clicking = False
+
+            if self.died:
+                if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                    self.client_data.respawn = True
+                    self.died = False
     
     def on_close(self):
         self.n.SendClose()
@@ -145,11 +152,7 @@ class Game(pyglet.window.Window):
     def on_draw(self):
         self.clear()
 
-        if not self.died or self.server_data.other_players == []:
-            player_spectating = self.server_data.player
-        else:
-            player_spectating = self.server_data.other_players[0]
-            
+        player_spectating = self.server_data.player if (not self.died or self.server_data.other_players == []) else self.server_data.other_players[0]
 
         # our bullets
         for bullet in player_spectating.gun.bullets:
@@ -190,6 +193,10 @@ class Game(pyglet.window.Window):
 
         if self.died:
             LIMAGESPRITE.draw()
+            if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                RESPAWNONHOVERSPRITE.draw()
+            else:
+                RESPAWNOFFHOVERSPRITE.draw()
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title

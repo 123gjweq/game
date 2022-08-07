@@ -68,6 +68,15 @@ class ThreadedClient:
         while True:
             self.client_data = pickle.loads(conn.recv(10000))
 
+            # if the player clicks respawn button
+            if self.dead and self.client_data.respawn:
+                # set player stats back to default
+                our_player = ThreadedClient.players[ID]
+                our_player.pos = random.choice(self.spawningPoints)
+                our_player.kills = 0
+                self.dead = False
+
+            # if the player x's out of the game
             if self.client_data == "Quit":
                 conn.close()
                 print(f"Closed connection with ID:{ID}") 
@@ -81,8 +90,8 @@ class ThreadedClient:
             if our_player.health <= 0:
                 self.dead = True
                 conn.send(pickle.dumps("You Died"))
-                our_player.pos = Vector2(-10000, -1000)
-                #ThreadedClient.players[ID] = None
+                our_player.pos = Vector2(-1000, -1000)
+                our_player.health = 100
                 print(f"Player Died with ID:{ID}")
 
             # update our_player bullets
