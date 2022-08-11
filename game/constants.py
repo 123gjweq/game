@@ -44,3 +44,6 @@ CenterImage(RESPAWNOFFHOVER)
 CenterImage(RESPAWNONHOVER)
 RESPAWNOFFHOVERSPRITE = pyglet.sprite.Sprite(RESPAWNOFFHOVER, 750, 150)
 RESPAWNONHOVERSPRITE = pyglet.sprite.Sprite(RESPAWNONHOVER, 750, 150)
+
+MAINSCREEN = pyglet.image.load('images/title.png')
+MAINSCREENSPRITE = pyglet.sprite.Sprite(MAINSCREEN)

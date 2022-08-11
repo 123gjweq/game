@@ -42,6 +42,7 @@ class Game(pyglet.window.Window):
 
         #player prediction
         self.just_recieved_server_data = False
+        self.is_playing = False
 
         # initialize map and walls
         for wall in self.map:
@@ -152,51 +153,54 @@ class Game(pyglet.window.Window):
     def on_draw(self):
         self.clear()
 
-        player_spectating = self.server_data.player if (not self.died or self.server_data.other_players == []) else self.server_data.other_players[0]
+        if self.is_playing:
+            player_spectating = self.server_data.player if (not self.died or self.server_data.other_players == []) else self.server_data.other_players[0]
 
-        # our bullets
-        for bullet in player_spectating.gun.bullets:
-            BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
-            BULLETSPRITE.draw()
-        # our player
-        if not self.died:
-            self.PLAYERSPRITES[player_spectating.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-            self.PLAYERSPRITES[player_spectating.image_index].rotation = self.client_data.angle_looking
-            self.PLAYERSPRITES[player_spectating.image_index].draw()
-
-        # walls
-        for i in range(0, len(Wall.wallBatch), 1):
-            # update wall position with camera then draw
-            Wall.wallBatch[i].position = (Wall.walls[i].pos + player_spectating.camera.offset).tuple()
-            Wall.wallBatch[i].draw()
-
-        # other players stuff
-        for player in self.server_data.other_players:
-            # other players bullets
-            for bullet in player.gun.bullets:
+            # our bullets
+            for bullet in player_spectating.gun.bullets:
                 BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
                 BULLETSPRITE.draw()
-            # other players sprites
-            self.PLAYERSPRITES[player.image_index].position = (player.pos + player_spectating.camera.offset).tuple()
-            self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
-            self.PLAYERSPRITES[player.image_index].draw()
-            # other players gun
-            GUNSPRITE.position = (player.pos + player_spectating.camera.offset).tuple()
-            GUNSPRITE.rotation = player.angle_looking
-            GUNSPRITE.draw()
+            # our player
+            if not self.died:
+                self.PLAYERSPRITES[player_spectating.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+                self.PLAYERSPRITES[player_spectating.image_index].rotation = self.client_data.angle_looking
+                self.PLAYERSPRITES[player_spectating.image_index].draw()
 
-        # our gun
-        if not self.died:
-            GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
-            GUNSPRITE.rotation = self.client_data.angle_looking
-            GUNSPRITE.draw()
+            # walls
+            for i in range(0, len(Wall.wallBatch), 1):
+                # update wall position with camera then draw
+                Wall.wallBatch[i].position = (Wall.walls[i].pos + player_spectating.camera.offset).tuple()
+                Wall.wallBatch[i].draw()
 
-        if self.died:
-            LIMAGESPRITE.draw()
-            if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
-                RESPAWNONHOVERSPRITE.draw()
-            else:
-                RESPAWNOFFHOVERSPRITE.draw()
+            # other players stuff
+            for player in self.server_data.other_players:
+                # other players bullets
+                for bullet in player.gun.bullets:
+                    BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
+                    BULLETSPRITE.draw()
+                # other players sprites
+                self.PLAYERSPRITES[player.image_index].position = (player.pos + player_spectating.camera.offset).tuple()
+                self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
+                self.PLAYERSPRITES[player.image_index].draw()
+                # other players gun
+                GUNSPRITE.position = (player.pos + player_spectating.camera.offset).tuple()
+                GUNSPRITE.rotation = player.angle_looking
+                GUNSPRITE.draw()
+
+            # our gun
+            if not self.died:
+                GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
+                GUNSPRITE.rotation = self.client_data.angle_looking
+                GUNSPRITE.draw()
+
+            if self.died:
+                LIMAGESPRITE.draw()
+                if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                    RESPAWNONHOVERSPRITE.draw()
+                else:
+                    RESPAWNOFFHOVERSPRITE.draw()
+        else:
+            MAINSCREENSPRITE.draw()
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title

@@ -109,12 +109,16 @@ class ThreadedClient:
                     if player != our_player and player != None:
                         if Collision.PointOnCircle(bullet.pos, player.pos, 25):
                             player.health -= our_player.gun.damage
+                            player.time_last_hit = time.time()
                             if player.health <= 0:
                                 our_player.kills += 1
+                                our_player.health += 50
                                 if not our_player.kills > 9:
                                     our_player.gun.ChangeStats(Gun.upgrades[our_player.kills])
                             our_player.gun.bullets.remove(bullet)
                             break
+
+            our_player.health = min(our_player.health, our_player.max_health)
 
             other_players = ThreadedClient.players[0:]
             other_players.pop(ID)

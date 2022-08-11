@@ -1,5 +1,6 @@
 from pyglet.window import key
 import math
+import time
 
 from gun import Gun
 from wall import Wall
@@ -27,6 +28,9 @@ class Player:
         self.gun = Gun(self.pos)
 
         self.kills = 0
+
+        self.time_last_hit = 0
+        self.time_last_healed = 0
 
     def Move(self, keys, dt):
         self.vel.Clear()
@@ -61,6 +65,11 @@ class Player:
         self.gun.Update(self.pos, client_data.mouse_pos, client_data.left_clicking, self.dt * 60)
         self.angle_looking = client_data.angle_looking
         self.last_two_angles = client_data.last_two_angles
+
+        if time.time() > self.time_last_hit + 5 and time.time() > self.time_last_healed + 1:
+            self.health += 2
+            self.time_last_healed = time.time()
+
 
     @property
     def image_index(self):
