@@ -47,3 +47,10 @@ RESPAWNONHOVERSPRITE = pyglet.sprite.Sprite(RESPAWNONHOVER, 750, 150)
 
 MAINSCREEN = pyglet.image.load('images/title.png')
 MAINSCREENSPRITE = pyglet.sprite.Sprite(MAINSCREEN)
+
+ENTERGAMEBUTTONOFFHOVER = pyglet.image.load('images/EnterArenaButtonOffHover.png')
+ENTERGAMEBUTTONONHOVER = pyglet.image.load('images/EnterArenaButtonOnHover.png')
+CenterImage(ENTERGAMEBUTTONOFFHOVER)
+CenterImage(ENTERGAMEBUTTONONHOVER)
+ENTERGAMEBUTTONOFFHOVERSPRITE = pyglet.sprite.Sprite(ENTERGAMEBUTTONOFFHOVER, 750, 150)
+ENTERGAMEBUTTONONHOVERSPRITE = pyglet.sprite.Sprite(ENTERGAMEBUTTONONHOVER, 750, 150)

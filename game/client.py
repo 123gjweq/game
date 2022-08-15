@@ -1,3 +1,4 @@
+from tkinter.font import BOLD
 import pyglet
 from pyglet.window import key
 from threading import Thread
@@ -103,6 +104,11 @@ class Game(pyglet.window.Window):
                 if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
                     self.client_data.respawn = True
                     self.died = False
+
+            if not self.is_playing:
+                if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                    self.is_playing = True
+                    self.client_data.joinedGame = True
     
     def on_close(self):
         self.n.SendClose()
@@ -193,6 +199,16 @@ class Game(pyglet.window.Window):
                 GUNSPRITE.rotation = self.client_data.angle_looking
                 GUNSPRITE.draw()
 
+            # draw ammo text
+            label = pyglet.text.Label(f"{self.server_data.player.gun.bullets_left}|{self.server_data.player.gun.clip_size}",
+                            font_name='serif',
+                            font_size=45,
+                            x=1350, y=100,
+                            anchor_x='center', anchor_y='center',
+                            color=(181,230,29, 255))
+            label.bold = True
+            label.draw()
+
             if self.died:
                 LIMAGESPRITE.draw()
                 if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
@@ -201,6 +217,11 @@ class Game(pyglet.window.Window):
                     RESPAWNOFFHOVERSPRITE.draw()
         else:
             MAINSCREENSPRITE.draw()
+            if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                ENTERGAMEBUTTONONHOVERSPRITE.draw()
+            else:
+                ENTERGAMEBUTTONOFFHOVERSPRITE.draw()
+
 
 def main():
     screen = Game(SCREENWIDTH, SCREENHEIGHT, "Game") #parameters: width, hight, title

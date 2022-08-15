@@ -16,16 +16,7 @@ from reusableClasses.collisions import Collision
 class ThreadedClient:
     players = []
 
-    def __init__(self, conn, ID):
-        self.walls = LoadMap("maps/map.txt")
-        Gun.walls.append(self.walls)
-
-        self.client_data = ClientData()
-        self.server_data = ServerData()
-
-        self.dead = False
-
-        self.spawningPoints =   [Vector2(x[0], x[1]) for x in [ (2739, 263),
+    spawningPoints =   [Vector2(x[0], x[1]) for x in [ (2739, 263),
                                                                 (3360, 2070),
                                                                 (1449, 1017),
                                                                 (129, 419),
@@ -37,14 +28,26 @@ class ThreadedClient:
                                                                 (3001, 181),
                                                                 (2310, 895),]]
 
+    def __init__(self, conn, ID):
+        self.walls = LoadMap("maps/map.txt")
+        Gun.walls.append(self.walls)
+
+        self.client_data = ClientData()
+        self.server_data = ServerData()
+
+        self.dead = False
+
+        self.intialSpawnPoint = Vector2(random.randrange(3150, 3150 + 250), random.randint(300, 300 + 200)) # 3150, 300, 250, 200
 
         # create everything before the threads start!
         self.threaded_game = Thread(target=self.ThreadedGame, args=(conn, ID))
         self.threaded_game.start()
 
+        self.justSpawned = True
+
     def ThreadedGame(self, conn, ID):
         # make player
-        ThreadedClient.players.append(Player(random.choice(self.spawningPoints))) # this vector is where you spawn
+        ThreadedClient.players.append(Player(self.intialSpawnPoint)) # this vector is where you spawn
         other_players = ThreadedClient.players[0:]
         other_players.pop(ID)
         server_data = ServerData(ThreadedClient.players[ID], other_players)
@@ -68,11 +71,15 @@ class ThreadedClient:
         while True:
             self.client_data = pickle.loads(conn.recv(10000))
 
+            if self.client_data.joinedGame and self.justSpawned:
+                ThreadedClient.players[ID].pos = random.choice(ThreadedClient.spawningPoints)
+                self.justSpawned = False
+
             # if the player clicks respawn button
             if self.dead and self.client_data.respawn:
                 # set player stats back to default
                 our_player = ThreadedClient.players[ID]
-                our_player.pos = random.choice(self.spawningPoints)
+                our_player.pos = random.choice(ThreadedClient.spawningPoints)
                 our_player.kills = 0
                 self.dead = False
 

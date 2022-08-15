@@ -69,6 +69,9 @@ class Player:
         if time.time() > self.time_last_hit + 5 and time.time() > self.time_last_healed + 1:
             self.health += 2
             self.time_last_healed = time.time()
+            
+        if client_data.keys[key.R] and self.gun.able_to_shoot:
+            self.gun.Reload()
 
 
     @property

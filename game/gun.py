@@ -32,10 +32,16 @@ class Gun:
         self.reload_time = Gun.upgrades[0][3]
         self.automatic = Gun.upgrades[0][4]
 
+        self.able_to_shoot = True
+
         self.distance_bullet_can_travel = 800
         self.time_last_shot = 0
 
         self.semi_automatic_check_if_shoot = True
+
+        self.clip_size = 20
+        self.bullets_left = 20
+        self.time_started_reloading = 0
 
     def ChangeStats(self, stats):
         self.damage = stats[0]
@@ -58,8 +64,13 @@ class Gun:
         elif is_leftclicking is False:
             self.semi_automatic_check_if_shoot = True
 
+        if time.time() > self.time_started_reloading + self.reload_time and self.time_started_reloading != 0:
+            self.able_to_shoot = True
+            self.bullets_left = self.clip_size
+            self.time_started_reloading = 0
+
     def Shoot(self, mouse_pos):
-        if (time.time() - self.time_last_shot) > self.time_between_bullets:
+        if (time.time() - self.time_last_shot) > self.time_between_bullets and self.bullets_left > 0 and self.able_to_shoot:
             # pos is relative to screen
             direction_of_bullet = (mouse_pos - Vector2(SCREENWIDTH / 2, SCREENHEIGHT / 2)).GetNormalized()
             # check if bullet hits wall
@@ -72,7 +83,12 @@ class Gun:
                         lowestLengthOfWall = lengthOfWall
 
             self.bullets.append(Bullet(self.pos, direction_of_bullet, self.bullet_speed, lowestLengthOfWall))
+            self.bullets_left -= 1
             self.time_last_shot = time.time()
+
+    def Reload(self):
+        self.time_started_reloading = time.time()
+        self.able_to_shoot = False
 
 
 class Bullet:
