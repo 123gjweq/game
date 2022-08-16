@@ -1,4 +1,3 @@
-from tkinter.font import BOLD
 import pyglet
 from pyglet.window import key
 from threading import Thread
@@ -13,6 +12,7 @@ from constants import *
 
 from reusableClasses.vector2 import Vector2
 from reusableClasses.collisions import Collision
+from reusableClasses.inputBox import InputBox
 
 
 class Game(pyglet.window.Window):
@@ -49,7 +49,17 @@ class Game(pyglet.window.Window):
         for wall in self.map:
             Wall(wall.pos.x, wall.pos.y, wall.width, wall.height)
 
+        self.usernameBox = InputBox(Vector2(750 - 300/2, 290 - 75/2), 300, 75)
 
+        self.username = ''
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == key.BACKSPACE:
+            self.usernameBox.OnBackspace()
+
+    def on_text(self, text):
+        if not self.is_playing:
+            self.usernameBox.OnText(text)
 
     def RemoveNone(self, players):
         new_players = []
@@ -96,6 +106,8 @@ class Game(pyglet.window.Window):
         if button == 1:
             self.left_clicking = True
 
+            self.usernameBox.OnClick(Vector2(x, y))
+
     def on_mouse_release(self, x, y, button, modifiers):
         if button == 1:
             self.left_clicking = False
@@ -107,6 +119,7 @@ class Game(pyglet.window.Window):
 
             if not self.is_playing:
                 if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
+                    self.username = self.usernameBox.text
                     self.is_playing = True
                     self.client_data.joinedGame = True
     
@@ -150,10 +163,7 @@ class Game(pyglet.window.Window):
 
         self.just_recieved_server_data = False
 
-        if self.died:
-            #self.n.Close()
-            #self.close()
-            pass
+        print(self.username)
 
     #draw
     def on_draw(self):
@@ -217,10 +227,25 @@ class Game(pyglet.window.Window):
                     RESPAWNOFFHOVERSPRITE.draw()
         else:
             MAINSCREENSPRITE.draw()
+            # button
+            # if you click play button on start of game
             if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
                 ENTERGAMEBUTTONONHOVERSPRITE.draw()
             else:
                 ENTERGAMEBUTTONOFFHOVERSPRITE.draw()
+            # username image, text
+            if self.usernameBox.active is False:
+                INPUTBOXIMAGENOTACTIVESPRITE.draw()
+            else:
+                INPUTBOXIMAGEACTIVESPRITE.draw()
+            label = pyglet.text.Label(self.usernameBox.text,
+                            font_name='serif',
+                            font_size=30,
+                            x=750, y=300,
+                            anchor_x='center', anchor_y='center',
+                            color=(181,230,29, 255))
+            label.bold = True
+            label.draw()
 
 
 def main():
