@@ -32,6 +32,8 @@ class Player:
         self.time_last_hit = 0
         self.time_last_healed = 0
 
+        self.username = ''
+
     def Move(self, keys, dt):
         self.vel.Clear()
 

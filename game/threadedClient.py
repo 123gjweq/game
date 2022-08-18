@@ -71,6 +71,9 @@ class ThreadedClient:
         while True:
             self.client_data = pickle.loads(conn.recv(10000))
 
+            if self.client_data.username:
+                ThreadedClient.players[ID].username = self.client_data.username
+
             if self.client_data.joinedGame and self.justSpawned:
                 ThreadedClient.players[ID].pos = random.choice(ThreadedClient.spawningPoints)
                 self.justSpawned = False

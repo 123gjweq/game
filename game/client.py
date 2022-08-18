@@ -52,6 +52,19 @@ class Game(pyglet.window.Window):
         self.usernameBox = InputBox(Vector2(750 - 300/2, 290 - 75/2), 300, 75)
 
         self.username = ''
+        self.ammo_label = pyglet.text.Label(f"string",
+                            font_name='serif',
+                            font_size=45,
+                            x=1350, y=100,
+                            anchor_x='center', anchor_y='center',
+                            color=(181,230,29, 255))
+
+        self.username_label = pyglet.text.Label(f"string",
+                            font_name='serif',
+                            font_size=15,
+                            x=1350, y=100,
+                            anchor_x='center', anchor_y='center',
+                            color=(181,230,29, 255))
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.BACKSPACE:
@@ -120,6 +133,7 @@ class Game(pyglet.window.Window):
             if not self.is_playing:
                 if Collision.PointOnRect(self.mouse_pos, Vector2(675, 118), 150, 65):
                     self.username = self.usernameBox.text
+                    self.client_data.username = self.username  # professionally:    set username to username
                     self.is_playing = True
                     self.client_data.joinedGame = True
     
@@ -163,8 +177,6 @@ class Game(pyglet.window.Window):
 
         self.just_recieved_server_data = False
 
-        print(self.username)
-
     #draw
     def on_draw(self):
         self.clear()
@@ -180,7 +192,13 @@ class Game(pyglet.window.Window):
             if not self.died:
                 self.PLAYERSPRITES[player_spectating.image_index].position = SCREENWIDTH / 2, SCREENHEIGHT / 2
                 self.PLAYERSPRITES[player_spectating.image_index].rotation = self.client_data.angle_looking
+
+                self.username_label.text = self.username
+                self.username_label.x = SCREENWIDTH / 2
+                self.username_label.y = SCREENHEIGHT / 2 + 55
+
                 self.PLAYERSPRITES[player_spectating.image_index].draw()
+                self.username_label.draw()
 
             # walls
             for i in range(0, len(Wall.wallBatch), 1):
@@ -190,14 +208,21 @@ class Game(pyglet.window.Window):
 
             # other players stuff
             for player in self.server_data.other_players:
+                tup = (player.pos + player_spectating.camera.offset).tuple()
                 # other players bullets
                 for bullet in player.gun.bullets:
                     BULLETSPRITE.position = (bullet.pos + player_spectating.camera.offset).tuple()
                     BULLETSPRITE.draw()
                 # other players sprites
-                self.PLAYERSPRITES[player.image_index].position = (player.pos + player_spectating.camera.offset).tuple()
+                self.PLAYERSPRITES[player.image_index].position = tup
                 self.PLAYERSPRITES[player.image_index].rotation = player.angle_looking
+
+                self.username_label.text = player.username
+                self.username_label.x = tup[0]
+                self.username_label.y = tup[1] + 55
+
                 self.PLAYERSPRITES[player.image_index].draw()
+                self.username_label.draw()
                 # other players gun
                 GUNSPRITE.position = (player.pos + player_spectating.camera.offset).tuple()
                 GUNSPRITE.rotation = player.angle_looking
@@ -210,14 +235,9 @@ class Game(pyglet.window.Window):
                 GUNSPRITE.draw()
 
             # draw ammo text
-            label = pyglet.text.Label(f"{self.server_data.player.gun.bullets_left}|{self.server_data.player.gun.clip_size}",
-                            font_name='serif',
-                            font_size=45,
-                            x=1350, y=100,
-                            anchor_x='center', anchor_y='center',
-                            color=(181,230,29, 255))
-            label.bold = True
-            label.draw()
+            self.ammo_label.text = f"{self.server_data.player.gun.bullets_left}|{self.server_data.player.gun.clip_size}"
+            self.ammo_label.bold = True
+            self.ammo_label.draw()
 
             if self.died:
                 LIMAGESPRITE.draw()
