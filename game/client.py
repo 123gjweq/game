@@ -66,6 +66,15 @@ class Game(pyglet.window.Window):
                             anchor_x='center', anchor_y='center',
                             color=(181,230,29, 255))
 
+        self.kills_label = pyglet.text.Label(f"string",
+                            font_name='serif',
+                            font_size=70,
+                            x=830, y=790,
+                            anchor_x='center', anchor_y='center',
+                            color=(181,230,29, 255))
+
+        self.kills_label.opacity = 150
+
     def on_key_press(self, symbol, modifiers):
         if symbol == key.BACKSPACE:
             self.usernameBox.OnBackspace()
@@ -233,6 +242,25 @@ class Game(pyglet.window.Window):
                 GUNSPRITE.position = SCREENWIDTH / 2, SCREENHEIGHT / 2
                 GUNSPRITE.rotation = self.client_data.angle_looking
                 GUNSPRITE.draw()
+
+            # top killer
+            topKiller = self.server_data.player
+            for player in self.server_data.other_players:
+                if player.kills > topKiller.kills:
+                    topKiller = player
+            self.username_label.text = topKiller.username
+            self.username_label.x, self.username_label.y = 700, 830
+            self.username_label.font_size = 25
+            self.username_label.opacity = 150
+
+            self.kills_label.text = str(topKiller.kills)
+            
+
+            TOPKILLERSPRITE.draw()
+            self.username_label.draw()
+            self.kills_label.draw()
+            self.username_label.font_size = 15
+            self.username_label.opacity = 255
 
             # draw ammo text
             self.ammo_label.text = f"{self.server_data.player.gun.bullets_left}|{self.server_data.player.gun.clip_size}"
