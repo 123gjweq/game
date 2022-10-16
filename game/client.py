@@ -2,6 +2,7 @@ import pyglet
 from pyglet.window import key
 from threading import Thread
 from random import randrange
+from audio import Audio
 import time
 
 from player import Player
@@ -75,6 +76,8 @@ class Game(pyglet.window.Window):
 
         self.kills_label.opacity = 150
 
+        self.audio = Audio()
+
     def on_key_press(self, symbol, modifiers):
         if symbol == key.BACKSPACE:
             self.usernameBox.OnBackspace()
@@ -112,6 +115,13 @@ class Game(pyglet.window.Window):
             else:
                 self.server_data = data
                 self.server_data.other_players = self.RemoveNone(data.other_players)
+            
+            for player in self.server_data.other_players:
+                if player.sound_info != None:
+                    sound_player = self.audio.GetAvailablePlayer()
+                    sound_player.queue(Audio.dict_of_sounds[player.sound_info[0]])
+                    sound_player.volume = 1.0
+                    sound_player.play()
 
             self.just_recieved_server_data = True
 
