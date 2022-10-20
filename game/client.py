@@ -119,9 +119,11 @@ class Game(pyglet.window.Window):
             for player in self.server_data.other_players:
                 if player.sound_info != None:
                     sound_player = self.audio.GetAvailablePlayer()
-                    sound_player.queue(Audio.dict_of_sounds[player.sound_info[0]])
-                    sound_player.volume = 1.0
-                    sound_player.play()
+                    if sound_player != False:
+                        sound_player.queue(Audio.dict_of_sounds[player.sound_info[0]])
+                        sound_player.volume = 1.0
+                        print("Playing sound")
+                        sound_player.play()
 
             self.just_recieved_server_data = True
 
