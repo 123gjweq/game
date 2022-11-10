@@ -34,8 +34,6 @@ class Player:
 
         self.username = ''
 
-        self.sound_info = None
-
     def Move(self, keys, dt):
         self.vel.Clear()
 
@@ -66,10 +64,9 @@ class Player:
     def Update(self, client_data):
         self.dt = client_data.dt
         self.Move(client_data.keys, self.dt * 60)
+        self.gun.Update(self.pos, client_data.mouse_pos, client_data.left_clicking, self.dt * 60)
         self.angle_looking = client_data.angle_looking
         self.last_two_angles = client_data.last_two_angles
-
-        self.sound_info = self.gun.Update(self.pos, client_data.mouse_pos, client_data.left_clicking, self.dt * 60)
 
         if time.time() > self.time_last_hit + 5 and time.time() > self.time_last_healed + 1:
             self.health += 2
